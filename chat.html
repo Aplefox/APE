@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APE 论坛</title>
+    <link rel="icon" type="image/png" href="https://bee-reg-ab.imagency.cn/p/52395a583541e8836c1e7f9b4332aba1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        
+        :root {
+            --primary:#d32f2f; --hover:#b71c1c; --shadow:rgba(211,47,47,0.3);
+            --bg:#12121a; --text:#e0e0e0; --card:rgba(30,30,40,0.85);
+            --border:rgba(255,255,255,0.06); --input:rgba(255,255,255,0.05);
+            --nav-bg:rgba(10,10,10,0.75); --nav-border:rgba(255,255,255,0.06);
+            --radius-lg:24px; --radius-md:16px; --radius-sm:12px;
+            --modal-bg:rgba(0,0,0,0.5);
+            --btn-text:#fff;
+            --btn-outline-text:#fff;
+        }
+
+        body {
+            background:var(--bg);
+            background-image: radial-gradient(circle at 10% 20%, rgba(211,47,47,0.06) 0%, transparent 50%),
+                              radial-gradient(circle at 90% 80%, rgba(211,47,47,0.04) 0%, transparent 50%);
+            color:var(--text);
+            font-family:'Inter',sans-serif; font-weight:400;
+            min-height:100vh;
+        }
+
+        body.light-mode {
+            --bg:#f0f0f5; --text:#1a1a2e; --card:rgba(255,255,255,0.9);
+            --border:rgba(0,0,0,0.06); --input:rgba(0,0,0,0.03);
+            --nav-bg:rgba(255,255,255,0.9); --nav-border:rgba(0,0,0,0.06);
+            --modal-bg:rgba(0,0,0,0.15);
+            --btn-text:#fff;
+            --btn-outline-text:#1a1a2e;
+        }
+        body.light-mode .post-card .title { color:#1a1a2e; }
+        body.light-mode .post-card .desc { color:rgba(0,0,0,0.6); }
+        body.light-mode .post-card .meta { color:rgba(0,0,0,0.4); }
+        body.light-mode .nav .logo { color:#1a1a2e; }
+        body.light-mode .nav .right a { color:#555; }
+        body.light-mode .nav .right a:hover { color:#1a1a2e; }
+        body.light-mode .nav .right .user { color:#d32f2f; }
+        body.light-mode .chapter-nav .ch-btn { color:rgba(0,0,0,0.6); border-color:rgba(0,0,0,0.1); }
+        body.light-mode .chapter-nav .ch-btn.active { color:#fff; }
+        body.light-mode .chapter-content .body { color:rgba(0,0,0,0.85); }
+        body.light-mode .read-header h1 { color:#1a1a2e; }
+        body.light-mode .read-header .meta { color:rgba(0,0,0,0.5); }
+        body.light-mode .action-row .like-btn { color:rgba(0,0,0,0.6); }
+        body.light-mode .action-row .like-btn:hover { color:#1a1a2e; }
+        body.light-mode .comment-item .name { color:rgba(0,0,0,0.8); }
+        body.light-mode .comment-item .text { color:rgba(0,0,0,0.7); }
+        body.light-mode .form-group label { color:rgba(0,0,0,0.7); }
+        body.light-mode .form-group input, body.light-mode .form-group textarea { color:#1a1a2e; }
+        body.light-mode .modal .title { color:#1a1a2e; }
+        body.light-mode .uc-panel .name { color:#1a1a2e; }
+        body.light-mode .uc-panel .stats { color:rgba(0,0,0,0.6); }
+        body.light-mode .uc-panel .stats .num { color:#1a1a2e; }
+        body.light-mode .btn-outline { border-color:rgba(0,0,0,0.15); color:#1a1a2e; }
+        body.light-mode .btn-outline:hover { background:rgba(0,0,0,0.05); }
+        body.light-mode .empty-state { color:rgba(0,0,0,0.3); }
+
+        /* ---- 动画 ---- */
+        @keyframes fadeInUp {
+            from { opacity:0; transform:translateY(20px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+        @keyframes pulseGlow {
+            0% { box-shadow:0 0 0 0 rgba(211,47,47,0.4); }
+            70% { box-shadow:0 0 0 10px rgba(211,47,47,0); }
+            100% { box-shadow:0 0 0 0 rgba(211,47,47,0); }
+        }
+        @keyframes likePop {
+            0% { transform:scale(1); }
+            25% { transform:scale(1.3); }
+            50% { transform:scale(0.9); }
+            100% { transform:scale(1); }
+        }
+        @keyframes slideIn {
+            from { opacity:0; transform:translateX(10px); }
+            to { opacity:1; transform:translateX(0); }
+        }
+        @keyframes modalIn {
+            from { opacity:0; transform:scale(0.95) translateY(20px); }
+            to { opacity:1; transform:scale(1) translateY(0); }
+        }
+        @keyframes modalOut {
+            from { opacity:1; transform:scale(1) translateY(0); }
+            to { opacity:0; transform:scale(0.95) translateY(20px); }
+        }
+
+        /* 性能模式：关闭所有动画 */
+        body.performance-mode * {
+            animation-duration: 0s !important;
+            animation-delay: 0s !important;
+            transition-duration: 0s !important;
+            transition-delay: 0s !important;
+        }
+
+        .container {
+            max-width:900px; margin:0 auto; padding:80px 20px 40px;
+            animation:fadeInUp 0.6s ease-out;
+        }
+        .nav {
+            position:fixed; top:0; left:0; width:100%; height:60px;
+            background:var(--nav-bg); backdrop-filter:blur(24px);
+            border-bottom:1px solid var(--nav-border);
+            display:flex; justify-content:space-between; align-items:center;
+            padding:0 20px; z-index:1000;
+        }
+        .nav .logo { font-size:20px; font-weight:600; color:#fff; cursor:pointer; }
+        .nav .right { display:flex; gap:15px; align-items:center; flex-wrap:wrap; }
+        .nav .right a { color:#aaa; text-decoration:none; font-size:14px; cursor:pointer; }
+        .nav .right a:hover { color:#fff; }
+        .nav .right .user { color:var(--primary); font-weight:600; font-size:14px; cursor:pointer; }
+
+        .theme-toggle {
+            background:transparent; border:1px solid var(--nav-border);
+            border-radius:50%; width:32px; height:32px;
+            color:#aaa; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:all 0.3s;
+        }
+        .theme-toggle:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+        body.light-mode .theme-toggle { color:#555; border-color:rgba(0,0,0,0.1); }
+        body.light-mode .theme-toggle:hover { color:#1a1a2e; border-color:rgba(0,0,0,0.3); }
+
+        /* 性能按钮 */
+        .perf-toggle {
+            background:transparent; border:1px solid var(--nav-border);
+            border-radius:50%; width:32px; height:32px;
+            color:#aaa; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:all 0.3s;
+        }
+        .perf-toggle:hover { color:#fff; border-color:rgba(255,255,255,0.3); }
+        body.light-mode .perf-toggle { color:#555; border-color:rgba(0,0,0,0.1); }
+        body.light-mode .perf-toggle:hover { color:#1a1a2e; border-color:rgba(0,0,0,0.3); }
+
+        .btn {
+            display:inline-block; background:var(--primary); color:#fff; border:none;
+            padding:8px 20px; border-radius:var(--radius-sm); font-size:14px;
+            font-weight:500; cursor:pointer; transition:.2s; text-decoration:none;
+            animation:pulseGlow 2s infinite;
+        }
+        .btn:hover { background:var(--hover); transform:translateY(-1px); }
+        .btn-outline {
+            background:transparent; border:1px solid rgba(255,255,255,0.15); color:#fff;
+            animation:none;
+        }
+        .btn-outline:hover { background:rgba(255,255,255,0.05); }
+        .btn-sm { padding:5px 14px; font-size:12px; }
+        .btn-danger { background:#e74c3c; animation:none; }
+        .btn-danger:hover { background:#c0392b; }
+        .post-card {
+            background:var(--card); backdrop-filter:blur(8px);
+            border:1px solid var(--border);
+            border-radius:var(--radius-md);
+            padding:20px 24px; margin-bottom:15px; cursor:pointer;
+            box-shadow:0 4px 20px rgba(0,0,0,0.3);
+            transition:all 0.3s;
+            animation:fadeInUp 0.5s ease-out;
+        }
+        .post-card:hover { transform:translateY(-4px) scale(1.01); border-color:rgba(211,47,47,0.3); box-shadow:0 8px 30px rgba(0,0,0,0.5); }
+        .post-card .title { font-size:18px; font-weight:600; color:#fff; margin-bottom:4px; }
+        .post-card .desc { font-size:14px; color:rgba(255,255,255,0.6); margin-bottom:8px; }
+        .post-card .meta { display:flex; gap:15px; font-size:12px; color:rgba(255,255,255,0.4); flex-wrap:wrap; }
+        .post-card .meta span { display:flex; align-items:center; gap:4px; }
+        .post-card .badge { display:inline-block; background:rgba(255,255,255,0.05); padding:2px 10px; border-radius:12px; font-size:11px; color:rgba(255,255,255,0.5); }
+        .post-card.pinned { border-color:var(--primary); }
+        .post-card.pinned .title::before { content:"📌 "; }
+        .search-row { display:flex; gap:10px; margin-bottom:25px; }
+        .search-row input {
+            flex:1; background:var(--input); border:1px solid var(--border);
+            border-radius:var(--radius-sm); padding:10px 16px; color:var(--text); font-size:14px;
+            outline:none; transition:.2s;
+        }
+        .search-row input:focus { border-color:var(--primary); }
+        .form-group { margin-bottom:15px; }
+        .form-group label { display:block; font-size:14px; font-weight:500; color:rgba(255,255,255,0.7); margin-bottom:4px; }
+        .form-group input, .form-group textarea {
+            width:100%; background:var(--input); border:1px solid var(--border);
+            border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:14px;
+            font-family:'Inter',sans-serif; outline:none; transition:.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color:var(--primary); }
+        .form-group textarea { min-height:100px; resize:vertical; }
+        .chapter-block {
+            background:rgba(255,255,255,0.02); border:1px solid var(--border);
+            border-radius:var(--radius-sm); padding:15px; margin-bottom:15px;
+            animation:slideIn 0.3s ease-out;
+        }
+        .chapter-block .chapter-title { font-weight:600; color:rgba(255,255,255,0.7); margin-bottom:10px; }
+        .chapter-block .chapter-remove { float:right; color:#e74c3c; cursor:pointer; font-size:12px; }
+        .read-header { margin-bottom:20px; }
+        .read-header h1 { font-size:28px; font-weight:700; color:#fff; margin-bottom:4px; }
+        .read-header .meta { display:flex; gap:15px; font-size:13px; color:rgba(255,255,255,0.5); flex-wrap:wrap; }
+        .chapter-nav { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid var(--border); }
+        .chapter-nav .ch-btn { padding:6px 16px; border-radius:20px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:rgba(255,255,255,0.6); font-size:13px; cursor:pointer; transition:all 0.2s; }
+        .chapter-nav .ch-btn:hover { background:rgba(255,255,255,0.1); }
+        .chapter-nav .ch-btn.active { background:var(--primary); border-color:var(--primary); color:#fff; }
+        .chapter-content { animation:slideIn 0.3s ease-out; }
+        .chapter-content h2 { font-size:20px; font-weight:600; color:#fff; margin-bottom:10px; }
+        .chapter-content .body { font-size:15px; line-height:1.8; color:rgba(255,255,255,0.85); white-space:pre-wrap; }
+        .action-row { display:flex; gap:15px; align-items:center; margin:20px 0; padding:15px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border); }
+        .action-row .like-btn { display:flex; align-items:center; gap:6px; background:transparent; border:none; color:rgba(255,255,255,0.6); font-size:14px; cursor:pointer; transition:all 0.2s; }
+        .action-row .like-btn:hover { color:#fff; }
+        .action-row .like-btn.liked { color:var(--primary); }
+        .action-row .like-btn.pop { animation:likePop 0.4s ease; }
+        .action-row .like-count { font-size:14px; color:rgba(255,255,255,0.6); margin-left:4px; }
+        .comment-item { padding:10px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+        .comment-item .name { font-weight:600; color:rgba(255,255,255,0.8); font-size:13px; }
+        .comment-item .time { font-size:11px; color:rgba(255,255,255,0.3); margin-left:8px; }
+        .comment-item .text { font-size:14px; color:rgba(255,255,255,0.7); margin-top:2px; }
+        .comment-form { display:flex; gap:10px; margin-top:15px; }
+        .comment-form input { flex:1; background:var(--input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:8px 14px; color:var(--text); font-size:14px; outline:none; }
+        .comment-form input:focus { border-color:var(--primary); }
+        .comment-form button { padding:8px 18px; }
+        .uc-panel { background:var(--card); backdrop-filter:blur(8px); border:1px solid var(--border); border-radius:var(--radius-lg); padding:30px; text-align:center; margin-bottom:25px; }
+        .uc-panel .avatar { width:80px; height:80px; border-radius:50%; object-fit:cover; background:#333; margin-bottom:10px; border:2px solid var(--border); }
+        .uc-panel .name { font-size:24px; font-weight:600; color:#fff; }
+        .uc-panel .stats { display:flex; gap:30px; justify-content:center; margin-top:10px; font-size:14px; color:rgba(255,255,255,0.6); }
+        .uc-panel .stats span { display:flex; align-items:center; gap:4px; }
+        .uc-panel .stats .num { color:#fff; font-weight:600; }
+        .modal-overlay {
+            display:none;
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background:var(--modal-bg); backdrop-filter:blur(8px);
+            justify-content:center; align-items:center; z-index:9999;
+        }
+        .modal-overlay.active {
+            display:flex;
+        }
+        .modal-overlay.active .modal {
+            animation:modalIn 0.3s ease-out forwards;
+        }
+        .modal-overlay.closing .modal {
+            animation:modalOut 0.2s ease-in forwards;
+        }
+        .modal {
+            background:var(--card); backdrop-filter:blur(12px);
+            border:1px solid var(--border); border-radius:var(--radius-lg);
+            padding:30px; max-width:600px; width:90%; max-height:80vh; overflow-y:auto;
+        }
+        .modal .title { font-size:20px; font-weight:600; color:#fff; margin-bottom:20px; }
+        .modal .close { float:right; color:rgba(255,255,255,0.3); cursor:pointer; font-size:20px; }
+        .modal .close:hover { color:#fff; }
+        .loading-spinner { display:inline-block; width:18px; height:18px; border:2px solid rgba(255,255,255,0.3); border-radius:50%; border-top-color:#fff; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .btn.loading { pointer-events:none; opacity:0.7; }
+        .empty-state { text-align:center; padding:40px 20px; color:rgba(255,255,255,0.3); }
+        .empty-state .icon { font-size:48px; margin-bottom:10px; }
+        @media(max-width:768px) {
+            .container { padding:70px 15px 30px; }
+            .nav .logo { font-size:16px; }
+            .post-card { padding:15px; }
+            .post-card .title { font-size:16px; }
+            .uc-panel .stats { gap:15px; font-size:12px; }
+            .modal { padding:20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="nav">
+        <div class="logo" onclick="goHome()">APE 论坛</div>
+        <div class="right">
+            <a onclick="openNewPost()">发帖</a>
+            <a onclick="openAdminPanel()" id="nav-admin" style="display:none;">管理</a>
+            <a onclick="goToChatRoom()">💬 聊天室</a>
+            <a onclick="openUserCenter()" id="nav-user">登录 / 注册</a>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+            <button class="perf-toggle" onclick="togglePerformance()" id="perf-btn">⚡</button>
+        </div>
+    </nav>
+
+    <div class="container" id="app">
+        <div id="page-home">
+            <div class="search-row">
+                <input id="search-input" placeholder="搜索帖子标题..." onkeydown="if(event.key==='Enter') searchPosts()">
+                <button class="btn" onclick="searchPosts()">搜索</button>
+            </div>
+            <div id="post-list"></div>
+            <div style="text-align:center;margin-top:20px;">
+                <button class="btn btn-outline" onclick="loadMore()" id="load-more-btn">加载更多</button>
+            </div>
+        </div>
+
+        <div id="page-newpost" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h2 style="color:var(--text);font-size:22px;">发布新帖</h2>
+                <button class="btn btn-outline btn-sm" onclick="goHome()">← 返回</button>
+            </div>
+            <div class="form-group">
+                <label>标题 *</label>
+                <input id="np-title" placeholder="输入帖子标题...">
+            </div>
+            <div class="form-group">
+                <label>简介</label>
+                <textarea id="np-desc" placeholder="简短介绍（可选）" rows="2"></textarea>
+            </div>
+            <div id="chapters-container">
+                <div class="chapter-block" data-index="0">
+                    <div class="chapter-title">
+                        第 1 章
+                        <span class="chapter-remove" onclick="removeChapter(this)" style="display:none;">✕</span>
+                    </div>
+                    <div class="form-group">
+                        <label>章节标题 *</label>
+                        <input class="ch-title" placeholder="输入章节标题...">
+                    </div>
+                    <div class="form-group">
+                        <label>正文 *</label>
+                        <textarea class="ch-content" placeholder="写章节内容..." rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;margin:15px 0;">
+                <button class="btn btn-outline btn-sm" onclick="addChapter()">+ 添加章节</button>
+            </div>
+            <button class="btn" onclick="submitPost()" id="submit-btn" style="width:100%;padding:12px;font-size:16px;">发布帖子</button>
+        </div>
+
+        <div id="page-read" style="display:none;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+                <button class="btn btn-outline btn-sm" onclick="goHome()">← 返回列表</button>
+                <button class="btn btn-outline btn-sm" onclick="deleteCurrentPost()" id="delete-post-btn" style="display:none;">删除帖子</button>
+                <button class="btn btn-outline btn-sm" onclick="togglePin()" id="pin-post-btn" style="display:none;">置顶</button>
+            </div>
+            <div class="read-header">
+                <h1 id="read-title"></h1>
+                <div class="meta">
+                    <span id="read-author"></span>
+                    <span id="read-time"></span>
+                    <span id="read-views">👁️ 0</span>
+                    <span id="read-likes-count">👍 0</span>
+                    <span id="read-comments-count">💬 0</span>
+                </div>
+            </div>
+            <div class="chapter-nav" id="chapter-nav"></div>
+            <div class="chapter-content" id="chapter-content"></div>
+            <div class="action-row">
+                <button class="like-btn" id="like-btn" onclick="toggleLike()">
+                    <span id="like-icon">👍</span>
+                    <span id="like-text">点赞</span>
+                    <span class="like-count" id="like-count">0</span>
+                </button>
+            </div>
+            <div id="comments-section">
+                <div id="comments-list"></div>
+                <div class="comment-form">
+                    <input id="comment-input" placeholder="写评论..." onkeydown="if(event.key==='Enter') submitComment()">
+                    <button class="btn btn-sm" onclick="submitComment()">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户中心 -->
+        <div class="modal-overlay" id="uc-overlay">
+            <div class="modal">
+                <span class="close" onclick="closeUserCenter()">✕</span>
+                <div class="uc-panel" style="border:none;padding:0;background:transparent;">
+                    <img class="avatar" id="uc-avatar" src="" style="display:none;">
+                    <div class="name" id="uc-name">未登录</div>
+                    <div class="stats">
+                        <span>📝 <span class="num" id="uc-post-count">0</span> 篇帖子</span>
+                        <span>👍 <span class="num" id="uc-like-count">0</span> 个点赞</span>
+                    </div>
+                </div>
+                <div style="margin-top:10px;">
+                    <div style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:10px;">我的帖子</div>
+                    <div id="uc-post-list"></div>
+                </div>
+                <div style="margin-top:15px;text-align:center;">
+                    <button class="btn btn-danger btn-sm" onclick="logoutUser()">退出登录</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 管理员面板 -->
+        <div class="modal-overlay" id="admin-overlay">
+            <div class="modal" style="max-width:650px;">
+                <span class="close" onclick="closeAdminPanel()">✕</span>
+                <div class="title">🛠️ 管理面板</div>
+                <div id="admin-user-list" style="max-height:50vh;overflow-y:auto;">
+                    <div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;">加载中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 登录 -->
+        <div class="modal-overlay" id="auth-overlay">
+            <div class="modal" style="max-width:400px;">
+                <span class="close" onclick="closeAuth()">✕</span>
+                <h3 id="auth-title" style="color:var(--primary);font-size:20px;margin-bottom:15px;">登录 APE</h3>
+                <div class="form-group">
+                    <input id="auth-username" placeholder="用户名" style="width:100%;">
+                </div>
+                <div class="form-group">
+                    <input id="auth-password" type="password" placeholder="密码" style="width:100%;">
+                </div>
+                <button class="btn" onclick="handleAuth()" id="auth-btn" style="width:100%;padding:10px;">登录</button>
+                <div style="text-align:center;margin-top:10px;font-size:13px;color:#888;cursor:pointer;" onclick="toggleAuthMode()">
+                    <span id="auth-switch">没有账号？ <span style="color:var(--primary);">去注册</span></span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const SB = supabase.createClient(
+            'https://bmykwusmtkbowpfbeozn.supabase.co',
+            'sb_publishable_t-YpxPIgGInkdHxBFPVgGQ_1YQNbD0Z'
+        );
+
+        const CONFIG = {
+            POSTS_PER_PAGE: 10
+        };
+
+        let state = {
+            user: localStorage.getItem('ape_user') || null,
+            avatar: localStorage.getItem('ape_avatar') || null,
+            level: parseInt(localStorage.getItem('ape_level')) || 1,
+            role: localStorage.getItem('ape_role') || 'user',
+            isLogin: true,
+            currentPost: null,
+            currentChapterIndex: 0,
+            chapters: [],
+            page: 0,
+            searchQuery: '',
+            isLiked: false,
+            isLight: localStorage.getItem('ape_light') === 'true',
+            isPerformance: localStorage.getItem('ape_performance') === 'true'
+        };
+
+        const $ = id => document.getElementById(id);
+
+        // ===== 性能模式 =====
+        function togglePerformance() {
+            state.isPerformance = !state.isPerformance;
+            localStorage.setItem('ape_performance', state.isPerformance ? 'true' : 'false');
+            applyPerformance();
+        }
+
+        function applyPerformance() {
+            const btn = document.getElementById('perf-btn');
+            if (state.isPerformance) {
+                document.body.classList.add('performance-mode');
+                btn.textContent = '🔋';
+                btn.style.color = '#4caf50';
+            } else {
+                document.body.classList.remove('performance-mode');
+                btn.textContent = '⚡';
+                btn.style.color = '#aaa';
+            }
+        }
+
+        function toggleTheme() {
+            state.isLight = !state.isLight;
+            localStorage.setItem('ape_light', state.isLight ? 'true' : 'false');
+            applyTheme();
+        }
+
+        function applyTheme() {
+            const btn = document.getElementById('theme-btn');
+            if (state.isLight) {
+                document.body.classList.add('light-mode');
+                btn.textContent = '☀️';
+            } else {
+                document.body.classList.remove('light-mode');
+                btn.textContent = '🌙';
+            }
+        }
+
+        function showFeedback(msg) {
+            const div = document.createElement('div');
+            div.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;padding:10px 24px;border-radius:12px;font-size:14px;z-index:99999;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.1);';
+            div.textContent = msg;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 2000);
+        }
+
+        function updateUI() {
+            const u = $('nav-user');
+            const adminBtn = $('nav-admin');
+            if (state.user) {
+                u.textContent = state.user;
+                u.style.color = 'var(--primary)';
+                if (state.role === 'admin') {
+                    adminBtn.style.display = 'inline-block';
+                } else {
+                    adminBtn.style.display = 'none';
+                }
+            } else {
+                u.textContent = '登录 / 注册';
+                u.style.color = 'var(--primary)';
+                adminBtn.style.display = 'none';
+            }
+        }
+
+        function goHome() {
+            $('page-home').style.display = 'block';
+            $('page-newpost').style.display = 'none';
+            $('page-read').style.display = 'none';
+            loadPosts();
+        }
+
+        function openAuth() {
+            $('auth-overlay').classList.remove('closing');
+            $('auth-overlay').classList.add('active');
+            $('auth-username').value = '';
+            $('auth-password').value = '';
+        }
+        function closeAuth() {
+            const overlay = $('auth-overlay');
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.classList.remove('active', 'closing');
+            }, 200);
+        }
+
+        function toggleAuthMode() {
+            state.isLogin = !state.isLogin;
+            $('auth-title').textContent = state.isLogin ? '登录 APE' : '注册 APE';
+            $('auth-btn').textContent = state.isLogin ? '登录' : '注册';
+            $('auth-switch').innerHTML = state.isLogin ? '没有账号？ <span style="color:var(--primary);">去注册</span>' : '已有账号？ <span style="color:var(--primary);">去登录</span>';
+        }
+
+        async function handleAuth() {
+            const btn = $('auth-btn');
+            const orig = btn.textContent;
+            btn.innerHTML = '<span class="loading-spinner"></span>处理中...';
+            btn.classList.add('loading');
+
+            const u = $('auth-username').value.trim();
+            const p = $('auth-password').value.trim();
+            if (!u || !p) { alert('用户名和密码不能为空'); btn.textContent = orig; btn.classList.remove('loading'); return; }
+
+            try {
+                const { data: ex } = await SB.from('users').select('*').eq('username', u);
+                if (state.isLogin) {
+                    if (!ex || ex.length === 0 || ex[0].password !== p) { alert('用户名或密码错误'); btn.textContent = orig; btn.classList.remove('loading'); return; }
+                    state.user = u;
+                    state.avatar = ex[0].avatar_url || null;
+                    state.level = ex[0].level || 1;
+                    state.role = ex[0].role || 'user';
+                    localStorage.setItem('ape_user', u);
+                    if (state.avatar) localStorage.setItem('ape_avatar', state.avatar);
+                    localStorage.setItem('ape_level', state.level);
+                    localStorage.setItem('ape_role', state.role);
+                    closeAuth();
+                    updateUI();
+                    goHome();
+                    showFeedback('登录成功！');
+                } else {
+                    if (ex && ex.length > 0) { alert('用户名已被注册'); btn.textContent = orig; btn.classList.remove('loading'); return; }
+                    let avatarUrl = null;
+                    const { error: ie } = await SB.from('users').insert({
+                        username: u,
+                        password: p,
+                        avatar_url: avatarUrl,
+                        level: 1,
+                        role: 'user'
+                    });
+                    if (ie) { alert('注册失败: ' + ie.message); btn.textContent = orig; btn.classList.remove('loading'); return; }
+                    state.user = u;
+                    state.avatar = avatarUrl;
+                    state.level = 1;
+                    state.role = 'user';
+                    localStorage.setItem('ape_user', u);
+                    localStorage.setItem('ape_level', '1');
+                    localStorage.setItem('ape_role', 'user');
+                    closeAuth();
+                    updateUI();
+                    goHome();
+                    showFeedback('🎉 欢迎加入 ' + u);
+                }
+            } catch (e) { alert('操作失败，请重试'); } finally {
+                btn.textContent = orig;
+                btn.classList.remove('loading');
+            }
+        }
+
+        function openUserCenter(targetUser) {
+            const username = targetUser || state.user;
+            if (!username) { openAuth(); return; }
+            $('uc-overlay').classList.remove('closing');
+            $('uc-overlay').classList.add('active');
+            const img = $('uc-avatar');
+            if (targetUser && targetUser !== state.user) {
+                img.style.display = 'none';
+            } else if (state.avatar) {
+                img.src = state.avatar;
+                img.style.display = 'block';
+            } else {
+                img.style.display = 'none';
+            }
+            $('uc-name').textContent = username;
+            loadUserStats(username);
+        }
+
+        function closeUserCenter() {
+            const overlay = $('uc-overlay');
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.classList.remove('active', 'closing');
+            }, 200);
+        }
+
+        async function loadUserStats(username) {
+            const { count: postCount } = await SB.from('posts').select('id', { count: 'exact', head: true }).eq('username', username);
+            const { data: likesData } = await SB.from('likes').select('id').eq('username', username);
+            $('uc-post-count').textContent = postCount || 0;
+            $('uc-like-count').textContent = likesData ? likesData.length : 0;
+
+            const { data: posts } = await SB.from('posts').select('id, title, created_at').eq('username', username).order('created_at', { ascending: false });
+            const list = $('uc-post-list');
+            if (!posts || posts.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;">还没有帖子</div>';
+            } else {
+                list.innerHTML = posts.map(p =>
+                    `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;font-size:14px;color:rgba(255,255,255,0.7);" onclick="closeUserCenter();readPost('${p.id}')">📖 ${p.title}</div>`
+                ).join('');
+            }
+        }
+
+        function logoutUser() {
+            if (!confirm('确认退出登录？')) return;
+            state.user = null;
+            state.avatar = null;
+            state.role = 'user';
+            localStorage.removeItem('ape_user');
+            localStorage.removeItem('ape_avatar');
+            localStorage.removeItem('ape_role');
+            closeUserCenter();
+            updateUI();
+            goHome();
+            showFeedback('已退出登录');
+        }
+
+        function openAdminPanel() {
+            if (state.role !== 'admin') { showFeedback('只有管理员可访问'); return; }
+            $('admin-overlay').classList.remove('closing');
+            $('admin-overlay').classList.add('active');
+            loadUserList();
+        }
+
+        function closeAdminPanel() {
+            const overlay = $('admin-overlay');
+            overlay.classList.add('closing');
+            setTimeout(() => {
+                overlay.classList.remove('active', 'closing');
+            }, 200);
+        }
+
+        async function loadUserList() {
+            const list = $('admin-user-list');
+            list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;">加载中...</div>';
+            const { data: users } = await SB.from('users').select('username, role');
+            if (!users || users.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;">暂无用户</div>';
+                return;
+            }
+            list.innerHTML = users.map(u => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <span style="cursor:pointer;color:rgba(255,255,255,0.8);" onclick="closeAdminPanel();openUserCenter('${u.username}')">👤 ${u.username}</span>
+                    <div>
+                        <span style="font-size:12px;color:rgba(255,255,255,0.4);margin-right:10px;">${u.role}</span>
+                        ${u.username !== 'Aplefox' ? `
+                            ${u.role === 'admin' 
+                                ? `<button class="btn btn-outline btn-sm" onclick="setUserRole('${u.username}', 'user')">降为普通</button>` 
+                                : `<button class="btn btn-sm" onclick="setUserRole('${u.username}', 'admin')">设为管理员</button>`
+                            }
+                        ` : '<span style="font-size:12px;color:#ffd700;">（创始人）</span>'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function setUserRole(username, role) {
+            if (!confirm(`确认把 ${username} 设为 ${role === 'admin' ? '管理员' : '普通用户'} 吗？`)) return;
+            const { error } = await SB.from('users').update({ role }).eq('username', username);
+            if (error) { showFeedback('操作失败: ' + error.message); return; }
+            showFeedback(`✅ 已把 ${username} 设为 ${role === 'admin' ? '管理员' : '普通用户'}`);
+            loadUserList();
+        }
+
+        async function loadPosts(reset = true) {
+            if (reset) { state.page = 0;
+                $('post-list').innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:20px;">加载中...</div>'; }
+            const q = SB.from('posts').select('id, username, title, description, views, created_at, is_pinned', { count: 'exact' });
+            if (state.searchQuery) q.ilike('title', `%${state.searchQuery}%`);
+            q.order('is_pinned', { ascending: false });
+            q.order('created_at', { ascending: false });
+            q.range(state.page * CONFIG.POSTS_PER_PAGE, (state.page + 1) * CONFIG.POSTS_PER_PAGE - 1);
+            const { data, count } = await q;
+
+            if (reset) $('post-list').innerHTML = '';
+            if (!data || data.length === 0) {
+                if (reset) $('post-list').innerHTML = '<div class="empty-state"><div class="icon">📭</div>还没有帖子</div>';
+                $('load-more-btn').style.display = 'none';
+                return;
+            }
+            const postIds = data.map(p => p.id);
+            const { data: likesData } = await SB.from('likes').select('post_id').in('post_id', postIds);
+            const { data: commentsData } = await SB.from('comments').select('post_id').in('post_id', postIds);
+            const likeMap = {};
+            const commentMap = {};
+            if (likesData) likesData.forEach(l => { likeMap[l.post_id] = (likeMap[l.post_id] || 0) + 1; });
+            if (commentsData) commentsData.forEach(c => { commentMap[c.post_id] = (commentMap[c.post_id] || 0) + 1; });
+
+            const list = $('post-list');
+            data.forEach(p => {
+                const likes = likeMap[p.id] || 0;
+                const comments = commentMap[p.id] || 0;
+                const time = new Date(p.created_at);
+                const timeStr = `${time.getFullYear()}.${String(time.getMonth()+1).padStart(2,'0')}.${String(time.getDate()).padStart(2,'0')}`;
+                const div = document.createElement('div');
+                div.className = 'post-card' + (p.is_pinned ? ' pinned' : '');
+                div.innerHTML = `
+                    <div class="title">${p.title}</div>
+                    ${p.description ? `<div class="desc">${p.description}</div>` : ''}
+                    <div class="meta">
+                        <span>👤 ${p.username}</span>
+                        <span>🕐 ${timeStr}</span>
+                        <span>👍 ${likes}</span>
+                        <span>💬 ${comments}</span>
+                        <span>👁️ ${p.views || 0}</span>
+                        ${p.is_pinned ? '<span class="badge">置顶</span>' : ''}
+                    </div>
+                `;
+                div.onclick = () => readPost(p.id);
+                list.appendChild(div);
+            });
+            if (count > (state.page + 1) * CONFIG.POSTS_PER_PAGE) {
+                $('load-more-btn').style.display = 'inline-block';
+            } else {
+                $('load-more-btn').style.display = 'none';
+            }
+        }
+
+        function loadMore() { state.page++;
+            loadPosts(false); }
+
+        function searchPosts() {
+            state.searchQuery = $('search-input').value.trim();
+            loadPosts(true);
+        }
+
+        async function readPost(id) {
+            $('page-home').style.display = 'none';
+            $('page-newpost').style.display = 'none';
+            $('page-read').style.display = 'block';
+
+            const { data: post } = await SB.from('posts').select('*').eq('id', id).single();
+            if (!post) { showFeedback('帖子不存在'); goHome(); return; }
+            state.currentPost = post;
+            state.currentChapterIndex = 0;
+
+            await SB.from('posts').update({ views: (post.views || 0) + 1 }).eq('id', id);
+
+            $('read-title').textContent = post.title;
+            $('read-author').textContent = '👤 ' + post.username;
+            $('read-time').textContent = '🕐 ' + new Date(post.created_at).toLocaleString();
+            $('read-views').textContent = '👁️ ' + (post.views || 0);
+
+            // 删除按钮：作者本人 或 role=admin
+            if (state.user === post.username || state.role === 'admin') {
+                $('delete-post-btn').style.display = 'inline-block';
+                $('delete-post-btn').style.borderColor = '#e74c3c';
+                $('delete-post-btn').style.color = '#e74c3c';
+            } else {
+                $('delete-post-btn').style.display = 'none';
+            }
+
+            if (state.role === 'admin') {
+                $('pin-post-btn').style.display = 'inline-block';
+                $('pin-post-btn').textContent = post.is_pinned ? '取消置顶' : '置顶';
+            } else {
+                $('pin-post-btn').style.display = 'none';
+            }
+
+            const { data: chapters } = await SB.from('chapters').select('*').eq('post_id', id).order('order_index', { ascending: true });
+            state.chapters = chapters || [];
+            renderChapterNav();
+            renderChapter(0);
+
+            if (state.user) {
+                const { data: likeCheck } = await SB.from('likes').select('id').eq('post_id', id).eq('username', state.user);
+                state.isLiked = likeCheck && likeCheck.length > 0;
+                updateLikeUI();
+            }
+            loadLikesComments();
+        }
+
+        async function togglePin() {
+            if (state.role !== 'admin') return;
+            const id = state.currentPost.id;
+            const newVal = !state.currentPost.is_pinned;
+            await SB.from('posts').update({ is_pinned: newVal }).eq('id', id);
+            state.currentPost.is_pinned = newVal;
+            showFeedback(newVal ? '✅ 已置顶' : '已取消置顶');
+            readPost(id);
+        }
+
+        function renderChapterNav() {
+            const nav = $('chapter-nav');
+            nav.innerHTML = state.chapters.map((ch, i) =>
+                `<button class="ch-btn ${i === state.currentChapterIndex ? 'active' : ''}" onclick="renderChapter(${i})">${ch.title || '第'+(i+1)+'章'}</button>`
+            ).join('');
+        }
+
+        function renderChapter(index) {
+            state.currentChapterIndex = index;
+            const ch = state.chapters[index];
+            if (!ch) { $('chapter-content').innerHTML = '<div style="color:rgba(255,255,255,0.3);">章节不存在</div>'; return; }
+            renderChapterNav();
+
+            let html = `<h2>${ch.title}</h2>`;
+            html += `<div class="body">${ch.content.replace(/\n/g, '<br>')}</div>`;
+            $('chapter-content').innerHTML = html;
+        }
+
+        async function loadLikesComments() {
+            const id = state.currentPost.id;
+            
+            // 获取点赞数
+            const { count: likeCount } = await SB.from('likes').select('id', { count: 'exact', head: true }).eq('post_id', id);
+            $('like-count').textContent = likeCount || 0;
+            $('read-likes-count').textContent = '👍 ' + (likeCount || 0);
+
+            // 获取评论列表（强制按时间倒序）
+            const { data: comments, error } = await SB.from('comments')
+                .select('*')
+                .eq('post_id', id)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('评论加载失败:', error);
+                showFeedback('评论加载失败');
+                return;
+            }
+
+            const list = $('comments-list');
+            const countEl = document.getElementById('read-comments-count');
+            
+            if (!comments || comments.length === 0) {
+                list.innerHTML = '<div style="text-align:center;color:rgba(255,255,255,0.3);padding:10px;">还没有评论</div>';
+                if (countEl) countEl.textContent = '💬 0';
+                return;
+            }
+
+            // 更新顶部评论数量
+            if (countEl) countEl.textContent = '💬 ' + comments.length;
+
+            // 渲染评论
+            list.innerHTML = comments.map(c =>
+                `<div class="comment-item">
+                    <span class="name">${c.username}</span>
+                    <span class="time">${new Date(c.created_at).toLocaleString()}</span>
+                    <div class="text">${c.content}</div>
+                </div>`
+            ).join('');
+        }
+
+        async function toggleLike() {
+            if (!state.user) { openAuth(); return; }
+            const id = state.currentPost.id;
+            if (state.isLiked) {
+                await SB.from('likes').delete().eq('post_id', id).eq('username', state.user);
+                state.isLiked = false;
+            } else {
+                await SB.from('likes').insert({ post_id: id, username: state.user });
+                state.isLiked = true;
+            }
+            const btn = $('like-btn');
+            btn.classList.remove('pop');
+            void btn.offsetWidth;
+            btn.classList.add('pop');
+            updateLikeUI();
+            loadLikesComments();
+        }
+
+        function updateLikeUI() {
+            const btn = $('like-btn');
+            if (state.isLiked) {
+                btn.classList.add('liked');
+                $('like-text').textContent = '已赞';
+            } else {
+                btn.classList.remove('liked');
+                $('like-text').textContent = '点赞';
+            }
+        }
+
+        async function submitComment() {
+            if (!state.user) { openAuth(); return; }
+            const input = $('comment-input');
+            const text = input.value.trim();
+            if (!text) { showFeedback('请输入评论内容'); return; }
+
+            // 先插入评论
+            const { error } = await SB.from('comments').insert({
+                post_id: state.currentPost.id,
+                username: state.user,
+                content: text
+            });
+
+            if (error) {
+                showFeedback('评论发送失败: ' + error.message);
+                return;
+            }
+
+            input.value = '';
+            showFeedback('✅ 评论已发送');
+
+            // 强制重新加载评论列表
+            await loadLikesComments();
+        }
+
+        async function deleteCurrentPost() {
+            if (!confirm('确认删除这个帖子吗？（所有章节、点赞、评论都会被删除）')) return;
+            await SB.from('posts').delete().eq('id', state.currentPost.id);
+            showFeedback('帖子已删除');
+            goHome();
+        }
+
+        function openNewPost() {
+            if (!state.user) { openAuth(); return; }
+            $('page-home').style.display = 'none';
+            $('page-newpost').style.display = 'block';
+            $('page-read').style.display = 'none';
+            $('np-title').value = '';
+            $('np-desc').value = '';
+            $('chapters-container').innerHTML = `
+                <div class="chapter-block" data-index="0">
+                    <div class="chapter-title">第 1 章<span class="chapter-remove" onclick="removeChapter(this)" style="display:none;">✕</span></div>
+                    <div class="form-group"><label>章节标题 *</label><input class="ch-title" placeholder="输入章节标题..."></div>
+                    <div class="form-group"><label>正文 *</label><textarea class="ch-content" placeholder="写章节内容..." rows="4"></textarea></div>
+                </div>
+            `;
+        }
+
+        function addChapter() {
+            const container = $('chapters-container');
+            const index = container.children.length;
+            const div = document.createElement('div');
+            div.className = 'chapter-block';
+            div.dataset.index = index;
+            div.innerHTML = `
+                <div class="chapter-title">第 ${index+1} 章<span class="chapter-remove" onclick="removeChapter(this)">✕</span></div>
+                <div class="form-group"><label>章节标题 *</label><input class="ch-title" placeholder="输入章节标题..."></div>
+                <div class="form-group"><label>正文 *</label><textarea class="ch-content" placeholder="写章节内容..." rows="4"></textarea></div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeChapter(el) {
+            const block = el.closest('.chapter-block');
+            if (document.querySelectorAll('.chapter-block').length <= 1) { showFeedback('至少保留一章'); return; }
+            block.remove();
+            document.querySelectorAll('.chapter-block').forEach((b, i) => {
+                b.dataset.index = i;
+                b.querySelector('.chapter-title').innerHTML = `第 ${i+1} 章<span class="chapter-remove" onclick="removeChapter(this)">✕</span>`;
+            });
+        }
+
+        async function submitPost() {
+            const btn = $('submit-btn');
+            const orig = btn.textContent;
+            btn.innerHTML = '<span class="loading-spinner"></span>发布中...';
+            btn.classList.add('loading');
+
+            const title = $('np-title').value.trim();
+            const desc = $('np-desc').value.trim();
+            if (!title) { showFeedback('请填写标题');
+                btn.textContent = orig;
+                btn.classList.remove('loading'); return; }
+
+            const chapterBlocks = document.querySelectorAll('.chapter-block');
+            const chapters = [];
+            for (const block of chapterBlocks) {
+                const chTitle = block.querySelector('.ch-title').value.trim();
+                const chContent = block.querySelector('.ch-content').value.trim();
+                if (!chTitle || !chContent) { showFeedback('请填写所有章节的标题和正文');
+                    btn.textContent = orig;
+                    btn.classList.remove('loading'); return; }
+                chapters.push({ title: chTitle, content: chContent });
+            }
+
+            if (chapters.length === 0) { showFeedback('请至少添加一个章节');
+                btn.textContent = orig;
+                btn.classList.remove('loading'); return; }
+
+            try {
+                const { data: post, error: postErr } = await SB.from('posts').insert({
+                    username: state.user,
+                    title: title,
+                    description: desc
+                }).select().single();
+                if (postErr) { showFeedback('创建帖子失败: ' + postErr.message);
+                    btn.textContent = orig;
+                    btn.classList.remove('loading'); return; }
+
+                for (let i = 0; i < chapters.length; i++) {
+                    await SB.from('chapters').insert({
+                        post_id: post.id,
+                        title: chapters[i].title,
+                        content: chapters[i].content,
+                        order_index: i + 1
+                    });
+                }
+                showFeedback('🎉 帖子发布成功！');
+                goHome();
+            } catch (e) { showFeedback('发布失败，请重试'); } finally {
+                btn.textContent = orig;
+                btn.classList.remove('loading');
+            }
+        }
+
+        // ===== 初始化 =====
+        applyPerformance();
+        applyTheme();
+        updateUI();
+        goHome();
+
+        // ===== 跳转到聊天室 =====
+        function goToChatRoom() {
+            if (!state.user) {
+                showFeedback('请先登录！');
+                openAuth();
+                return;
+            }
+            window.location.href = '/chat_room.html';
+        }
+
+        // ===== 暴露全局 =====
+        window.goHome = goHome;
+        window.openNewPost = openNewPost;
+        window.openUserCenter = openUserCenter;
+        window.closeUserCenter = closeUserCenter;
+        window.openAuth = openAuth;
+        window.closeAuth = closeAuth;
+        window.toggleAuthMode = toggleAuthMode;
+        window.handleAuth = handleAuth;
+        window.logoutUser = logoutUser;
+        window.readPost = readPost;
+        window.renderChapter = renderChapter;
+        window.toggleLike = toggleLike;
+        window.submitComment = submitComment;
+        window.deleteCurrentPost = deleteCurrentPost;
+        window.togglePin = togglePin;
+        window.loadMore = loadMore;
+        window.searchPosts = searchPosts;
+        window.addChapter = addChapter;
+        window.removeChapter = removeChapter;
+        window.submitPost = submitPost;
+        window.openAdminPanel = openAdminPanel;
+        window.closeAdminPanel = closeAdminPanel;
+        window.loadUserList = loadUserList;
+        window.setUserRole = setUserRole;
+        window.toggleTheme = toggleTheme;
+        window.togglePerformance = togglePerformance;
+        window.goToChatRoom = goToChatRoom;
+    </script>
+</body>
+</html>
