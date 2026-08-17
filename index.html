@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>APE 官方主页</title>
+    <link rel="icon" type="image/png" href="https://bee-reg-ab.imagency.cn/p/52395a583541e8836c1e7f9b4332aba1.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        /* ---------- 全局基础 ---------- */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior:smooth; }
+        :root {
+            --primary:#d32f2f; --hover:#b71c1c; --shadow:rgba(211,47,47,0.3);
+            --bg:#0b0b0b; --bg-image:url('https://bee-reg-ab.imagency.cn/p/82fce3ce9382c8cf887a428ab8a46b36.png');
+            --text:#e0e0e0; --card:rgba(20,20,20,0.4); --border:rgba(255,255,255,0.06);
+            --label:#888; --value:#fff; --nav:rgba(10,10,10,0.6); --nav-border:rgba(255,255,255,0.08);
+            --nav-t:#aaa; --nav-th:#fff; --input:rgba(255,255,255,0.05);
+            --radius-lg:24px; --radius-md:16px; --radius-sm:12px;
+            --apple-size:60px;
+        }
+        body {
+            background:var(--bg) var(--bg-image) center/cover fixed;
+            color:var(--text); font-family:'Inter',sans-serif; font-weight:400;
+            transition:background .3s,color .3s;
+        }
+        body.white-mode {
+            --bg:#f0f0f0; --bg-image:none; --text:#111; --card:rgba(255,255,255,0.6);
+            --border:rgba(0,0,0,0.06); --label:#666; --value:#000; --nav:rgba(255,255,255,0.85);
+            --nav-border:rgba(0,0,0,0.08); --nav-t:#555; --nav-th:#000; --input:rgba(0,0,0,0.05);
+        }
+        body.white-mode .navbar,.white-mode .glass-panel,.white-mode .info-card,.white-mode .info-panel{background:var(--card);border-color:var(--border);}
+        body.mode-fast { background-image:none !important; background-color:#0b0b0b !important; }
+        body.mode-ultra { background:none !important; background-color:#0b0b0b !important; font-family:'Courier New',monospace !important; }
+        body.mode-ultra .hero,.mode-ultra .drop-btn,.mode-ultra .scroll-hint,.mode-ultra #progress-bar,.mode-ultra .game-feedback,.mode-ultra .ape-text,.mode-ultra .splash-text,.mode-ultra .subtitle,.mode-ultra .partners-section,.mode-ultra .land-section{display:none !important;}
+
+        /* ---------- 导航栏 ---------- */
+        .navbar{position:fixed;top:0;left:0;width:100%;height:60px;background:var(--nav);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--nav-border);display:flex;justify-content:space-between;align-items:center;padding:0 40px;z-index:1000;}
+        .navbar .left{display:flex;align-items:center;gap:12px;}
+        .navbar .logo{font-size:22px;font-weight:600;color:var(--text);letter-spacing:1px;}
+        .navbar .cmd-btn{width:32px;height:32px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:14px;font-weight:500;cursor:pointer;transition:.2s;font-family:'Inter',monospace;border-radius:4px;}
+        .navbar .cmd-btn:hover{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.3);}
+        .navbar .bg-toggle-btn{width:32px;height:32px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);font-size:14px;font-weight:500;cursor:pointer;transition:.2s;font-family:'Inter',monospace;border-radius:4px;display:flex;align-items:center;justify-content:center;}
+        .navbar .bg-toggle-btn:hover{background:rgba(255,255,255,0.15);color:#fff;border-color:rgba(255,255,255,0.3);}
+        .navbar .links{display:flex;gap:25px;align-items:center;flex-wrap:wrap;}
+        .navbar .links a{color:var(--nav-t);text-decoration:none;font-size:14px;font-weight:500;transition:.3s;cursor:pointer;}
+        .navbar .links a:hover{color:var(--nav-th);}
+        .navbar .user{color:var(--primary);font-weight:600;font-size:14px;border-left:1px solid var(--nav-border);padding-left:20px;cursor:pointer;transition:.2s;}
+        .navbar .user:hover{color:#fff;}
+
+        /* ---------- 首屏 ---------- */
+        .hero{display:flex;justify-content:space-between;align-items:center;min-height:100vh;padding:100px 80px;background:rgba(0,0,0,0.4);}
+        .hero-left{flex:1;max-width:50%;padding-right:40px;}
+        .ape-text{font-size:130px;font-weight:700;letter-spacing:-4px;line-height:1;color:#fff;margin-bottom:10px;}
+        .sub{font-size:24px;font-weight:300;color:rgba(255,255,255,0.6);letter-spacing:2px;margin-bottom:30px;}
+        .eat-btn{background:transparent;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:12px 36px;border-radius:30px;font-size:16px;font-weight:500;cursor:pointer;transition:.3s;font-family:'Inter',sans-serif;letter-spacing:1px;backdrop-filter:blur(4px);}
+        .eat-btn:hover{background:var(--primary);border-color:var(--primary);transform:translateY(-2px);box-shadow:0 8px 25px var(--shadow);}
+        .hero-right{flex:1;max-width:45%;}
+        .glass{background:var(--card);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;box-shadow:0 15px 50px rgba(0,0,0,0.5);}
+        .glass h2{font-size:28px;font-weight:600;color:#fff;margin-bottom:15px;letter-spacing:1px;}
+        .glass p{font-size:16px;line-height:1.8;color:rgba(255,255,255,0.8);margin-bottom:25px;}
+        .btns{display:flex;gap:15px;flex-wrap:wrap;}
+        .btn{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:#fff;padding:10px 24px;border-radius:30px;font-size:15px;font-weight:500;cursor:pointer;transition:.3s;text-decoration:none;font-family:'Inter',sans-serif;backdrop-filter:blur(4px);}
+        .btn:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px);}
+        .btn.primary{background:var(--primary);border-color:var(--primary);}
+        .btn.primary:hover{background:var(--hover);}
+        .scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.2);font-size:12px;font-weight:300;letter-spacing:4px;animation:hint 2.5s infinite;pointer-events:none;}
+        @keyframes hint{0%{opacity:.2;transform:translateX(-50%) translateY(0);}50%{opacity:.7;transform:translateX(-50%) translateY(-6px);}100%{opacity:.2;transform:translateX(-50%) translateY(0);}}
+
+        /* ---------- 进度条 ---------- */
+        #progress{position:fixed;bottom:0;left:0;width:100%;height:2px;background:var(--progress-track);z-index:9999;pointer-events:none;}
+        #progress-fill{height:100%;width:0%;background:var(--primary);transition:.2s;}
+        #level{position:fixed;bottom:32px;left:50%;transform:translateX(-50%);color:var(--level-text);font-size:14px;letter-spacing:2px;font-family:monospace;pointer-events:none;z-index:9998;}
+        .fb{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);color:var(--feedback-text);font-size:16px;letter-spacing:1px;pointer-events:none;opacity:0;transition:.3s;z-index:9999;}
+        .fb.show{opacity:1;}
+
+        /* ---------- 交错卡片（毛玻璃版） ---------- */
+        .content{max-width:1200px;margin:0 auto 80px;padding:40px 20px;}
+        .grid{display:flex;flex-direction:column;gap:40px;}
+        
+        /* 强制双列，防止竖屏 */
+        .row{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:stretch;}
+        /* 偶数行反转（左变右） */
+        .row:nth-child(even){direction:rtl;}
+        .row:nth-child(even) .card{direction:ltr;}
+
+        .card{position:relative;border-radius:var(--radius-lg);overflow:hidden;min-height:350px;background:var(--card);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--border);box-shadow:0 10px 40px rgba(0,0,0,0.5);transition:.3s;}
+        .card:hover{transform:translateY(-5px);}
+        .card img{width:100%;height:100%;object-fit:cover;position:absolute;top:0;left:0;z-index:1;}
+        .card .fade{position:absolute;bottom:0;left:0;width:100%;height:40%;background:linear-gradient(to bottom,transparent,var(--bg));z-index:2;pointer-events:none;}
+        .card .txt{position:absolute;bottom:25px;left:0;width:100%;padding:0 25px;text-align:center;z-index:3;color:#fff;font-size:22px;font-weight:500;letter-spacing:1px;text-shadow:0 2px 15px rgba(0,0,0,0.9);}
+
+        /* ---------- 信息列表（纯文字列表） ---------- */
+        .info-wrap{display:flex;flex-direction:column;gap:5px;margin-top:40px;max-width:800px;margin-left:auto;margin-right:auto;}
+        .info-item{display:flex;justify-content:space-between;padding:10px 5px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:15px;color:var(--text);}
+        .info-item:last-child{border-bottom:none;}
+        .info-item .label{color:var(--label);font-weight:400;}
+        .info-item .value{color:var(--value);font-weight:500;}
+        .section-title{font-size:18px;font-weight:600;color:var(--primary);margin:20px 0 5px 0;padding:0 5px;letter-spacing:1px;}
+
+        /* ---------- 命令控制台 ---------- */
+        #cmd-overlay{position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;justify-content:center;align-items:center;z-index:9999;font-family:monospace;}
+        #cmd-overlay.active{display:flex;}
+        #cmd-box{background:#1a1a1a;border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-md);padding:40px 50px;width:90%;max-width:900px;box-shadow:0 20px 60px rgba(0,0,0,0.8);max-height:85vh;display:flex;flex-direction:column;transition:.3s;}
+        #cmd-box .title{font-size:14px;color:rgba(255,255,255,0.3);letter-spacing:2px;margin-bottom:15px;text-align:center;}
+        #cmd-row{display:flex;gap:10px;}
+        #cmd-input{flex:1;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 16px;color:#fff;font-size:16px;font-family:monospace;outline:none;transition:.2s;}
+        #cmd-input:focus{border-color:rgba(255,255,255,0.3);}
+        #cmd-send{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:0 20px;color:#fff;font-size:14px;cursor:pointer;transition:.2s;font-family:monospace;}
+        #cmd-send:hover{background:rgba(255,255,255,0.2);}
+        #cmd-output{margin-top:15px;font-size:15px;color:rgba(255,255,255,0.6);min-height:30px;overflow-y:auto;flex-grow:1;max-height:45vh;padding-right:10px;white-space:pre-wrap;line-height:1.6;font-family:monospace;}
+        #cmd-output.error{color:#ff6b6b;}
+        #cmd-output.success{color:#69db7c;}
+        .cmd-close{display:block;margin-top:20px;text-align:center;color:rgba(255,255,255,0.3);font-size:12px;cursor:pointer;transition:.2s;}
+        .cmd-close:hover{color:rgba(255,255,255,0.5);}
+        #color-picker{display:none;flex-direction:column;align-items:center;margin-top:15px;padding-top:15px;border-top:1px solid rgba(255,255,255,0.05);}
+        #color-picker.active{display:flex;}
+
+        /* ---------- 用户中心 ---------- */
+        #uc-overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);z-index:10000;justify-content:center;align-items:center;}
+        #uc-overlay.active{display:flex;}
+        .uc-box{text-align:center;padding:40px;border-radius:var(--radius-lg);background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--border);min-width:300px;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+        .uc-box .avatar{width:80px;height:80px;border-radius:50%;object-fit:cover;background:#333;border:2px solid var(--border);margin-bottom:10px;display:none;}
+        .uc-box .name{font-size:28px;font-weight:600;color:#fff;margin-bottom:30px;}
+        .uc-box .actions{display:flex;flex-direction:column;gap:12px;width:100%;max-width:200px;margin:0 auto;}
+        .uc-box .actions button{padding:10px;border-radius:var(--radius-sm);border:1px solid rgba(255,255,255,0.1);background:transparent;color:#fff;font-size:16px;cursor:pointer;transition:.2s;font-family:'Inter',sans-serif;font-weight:500;}
+        .uc-box .actions button:hover{background:rgba(255,255,255,0.05);}
+        .uc-box .actions .logout{border-color:var(--primary);color:#ff6b6b;}
+        .uc-box .actions .logout:hover{background:var(--primary);color:#fff;}
+        #uc-edit-area{margin:10px 0;display:flex;flex-direction:column;align-items:center;gap:8px;}
+        #uc-edit-area input{padding:8px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;width:80%;font-family:'Inter',sans-serif;}
+        #uc-edit-area input:focus{border-color:var(--primary);}
+        #uc-edit-area label{font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;background:rgba(255,255,255,0.05);padding:4px 12px;border-radius:20px;}
+        #uc-edit-area button{padding:6px 16px;background:var(--primary);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;}
+
+        /* ---------- 登录 ---------- */
+        #auth-overlay{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);justify-content:center;align-items:center;z-index:10000;}
+        #auth-overlay.active{display:flex;}
+        #auth-box{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--radius-md);padding:30px 40px;width:90%;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6);}
+        #auth-box h3{color:var(--primary);margin-bottom:20px;font-size:22px;font-weight:600;}
+        #auth-box .input{width:100%;margin-bottom:12px;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#fff;font-size:14px;outline:none;font-family:'Inter',sans-serif;}
+        #auth-box .input:focus{border-color:var(--primary);}
+        #auth-box .btn{width:100%;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:600;cursor:pointer;transition:.2s;margin-top:5px;}
+        #auth-box .btn:hover{background:var(--hover);}
+        #auth-box .switch{margin-top:15px;font-size:14px;color:#888;cursor:pointer;}
+        #auth-box .switch span{color:var(--primary);text-decoration:underline;}
+        #auth-box .close{margin-top:15px;color:rgba(255,255,255,0.3);font-size:12px;cursor:pointer;display:block;}
+        .avatar-upload-area{margin:10px 0;display:flex;flex-direction:column;align-items:center;gap:5px;}
+        .avatar-upload-area img{width:60px;height:60px;border-radius:50%;object-fit:cover;background:#333;display:none;}
+        .avatar-upload-area label{font-size:13px;color:rgba(255,255,255,0.5);cursor:pointer;background:rgba(255,255,255,0.05);padding:4px 12px;border-radius:20px;}
+
+        /* ---------- 加载动画 ---------- */
+        .loading-spinner{display:inline-block;width:20px;height:20px;border:3px solid rgba(255,255,255,0.3);border-radius:50%;border-top-color:#fff;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+        .btn.loading{pointer-events:none;opacity:0.7;}
+
+        /* ---------- 辅助 ---------- */
+        footer{padding:20px;text-align:center;color:rgba(255,255,255,0.3);font-size:12px;border-top:1px solid var(--border);margin-top:40px;font-weight:300;}
+        @media(max-width:768px){
+            .hero{flex-direction:column;padding:100px 20px;gap:40px;}
+            .hero-left,.hero-right{max-width:100%;padding-right:0;}
+            .ape-text{font-size:60px;}
+            .sub{font-size:18px;}
+            .row{grid-template-columns:1fr;}
+            .row:nth-child(even){direction:ltr;}
+            .navbar{padding:0 15px;}
+            .navbar .logo{font-size:18px;}
+            .navbar .links a{font-size:12px;}
+        }
+
+        /* ===== 相册专属 CSS ===== */
+        .album-wrapper {
+            width: 90vw;
+            max-width: 850px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .flip-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 650px;
+            background: #1a1a1a;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid rgba(255,255,255,0.05);
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+        .flip-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        .flip-page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        .flip-page.hidden {
+            display: none;
+        }
+        .flip-page img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 12px;
+        }
+        .page-number {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 16px;
+            letter-spacing: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 16px;
+            border-radius: 20px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.05);
+            pointer-events: none;
+            z-index: 20;
+        }
+        .flip-page.slide-out-left {
+            transform: translateX(-40%) scale(0.9);
+            opacity: 0;
+        }
+        .flip-page.slide-in-right {
+            transform: translateX(40%) scale(0.9);
+            opacity: 0;
+        }
+        .flip-page.slide-in-right.active {
+            transform: translateX(0) scale(1);
+            opacity: 1;
+        }
+        .cover-page,
+        .back-cover {
+            background-color: #2a2a2a;
+            position: relative;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .cover-page .title {
+            font-size: 4rem;
+            color: #ffffff;
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin-top: -60px;
+            position: relative;
+            z-index: 1;
+        }
+        .cover-page .hint {
+            position: relative;
+            z-index: 1;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.25);
+            letter-spacing: 3px;
+            margin-top: 20px;
+            font-weight: 300;
+            animation: pulseHint 2s ease-in-out infinite;
+        }
+        @keyframes pulseHint {
+            0% { opacity: 0.2; }
+            50% { opacity: 0.6; }
+            100% { opacity: 0.2; }
+        }
+        .back-cover .back-title {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: #ffffff;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }
+        .back-cover .back-desc {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.8;
+            letter-spacing: 1px;
+            font-weight: 300;
+        }
+        .back-cover .back-desc .highlight {
+            color: #ffd700;
+        }
+        .click-area {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            width: 50%;
+            z-index: 10;
+            cursor: pointer;
+            background: transparent;
+        }
+        .click-area-left { left: 0; }
+        .click-area-right { right: 0; }
+        .album-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.2);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 进度条 -->
+    <div id="progress"><div id="progress-fill"></div></div>
+    <div class="fb" id="feedback"></div>
+    <div id="level">Lv.1</div>
+
+    <!-- 导航栏 -->
+    <div class="navbar">
+        <div class="left">
+            <div class="logo">APE</div>
+            <button class="cmd-btn" onclick="openCmd()">>_</button>
+            <button class="bg-toggle-btn" onclick="toggleBg()" title="切换背景">🖼️</button>
+        </div>
+        <div class="links">
+            <!-- 👇 首页改成 goToHome() 👇 -->
+            <a onclick="goToHome()">首页</a>
+            <a onclick="openAlbum()">📷 相册</a>
+            <a href="https://mc.igng.net/" target="_blank">IGNG服务器官网</a>
+            <a onclick="openForumNewTab()">📝 论坛</a>
+            <a href="https://qm.qq.com/q/arn6UUVLOg" target="_blank">QQ</a>
+            <span id="nav-user" class="user" onclick="openUserCenter()">登录 / 注册</span>
+        </div>
+    </div>
+
+    <!-- 首屏 -->
+    <section class="hero" id="page-home">
+        <div class="hero-left">
+            <div class="ape-text">APE</div>
+            <div class="sub">ApplePoleEquity</div>
+            <button class="eat-btn" onclick="eatApple()">Eat apple</button>
+        </div>
+        <div class="hero-right">
+            <div class="glass">
+                <h2>✦ 关于 APE</h2>
+                <p>ApplePoleEquity，一个建立在 Minecraft IGNG 服务器上的玩家组织。<br>源于社区，归于社区。</p>
+                <div class="btns">
+                    <a href="https://qm.qq.com/q/arn6UUVLOg" target="_blank" class="btn primary">🐧 加入 QQ</a>
+                    <a href="#content" class="btn">📗 继续下滑</a>
+                    <a href="https://sps.yy-gp.com/h68bw/i.html" target="_blank" class="btn">📷 浏览相册</a>
+                    <button class="btn" onclick="openAuth()">📌 注册账号</button>
+                </div>
+            </div>
+        </div>
+        <div class="scroll-hint">—— scroll ——</div>
+    </section>
+
+    <!-- 内容 -->
+    <section class="content" id="content">
+        <div id="page-content-home">
+            <!-- 卡片网格 -->
+            <div class="grid" id="card-grid">
+                <!-- 第1行 -->
+                <div class="row">
+                    <div class="card">
+                        <img src="https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJjnGphuSFY1mNYqOi2FVbwdPiUB1V_AALhHgACIU4IV3vZYYhPyKoMPQQ.jpg">
+                        <div class="fade"></div>
+                        <div class="txt">友好的玩家社区</div>
+                    </div>
+                    <div class="card">
+                        <img src="https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmgmpx86h4nAyCuyfhRPydqBCAYJ7cAAKVHgAClAmRV2x6ZrCk4yyRPQQ.jpg">
+                        <div class="fade"></div>
+                        <div class="txt">悠久历史</div>
+                    </div>
+                </div>
+                <!-- 第2行 -->
+                <div class="row">
+                    <div class="card">
+                        <img src="https://bee-reg-ab.imagency.cn/p/63cf2e92364c3b1d008bcac591aa20b8.png">
+                        <div class="fade"></div>
+                        <div class="txt">轻松的氛围</div>
+                    </div>
+                    <div class="card">
+                        <img src="https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmjmpx9Bsgsd0RAkQaUH-_I1-bStbkAAKhHgAClAmRV8o0T7P7JOQiPQQ.jpg">
+                        <div class="fade"></div>
+                        <div class="txt">不断发展的新设施</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 信息列表 -->
+            <div class="info-wrap">
+                <div class="section-title">✦ 服务器</div>
+                <div class="info-item"><span class="label">IGNG纯净服</span><span class="value">clearx.igng.net</span></div>
+                <div class="info-item"><span class="label">IGNG作弊服</span><span class="value">ban.igng.net</span></div>
+
+                <div class="section-title">✦ 合作</div>
+                <div class="info-item"><span class="label">组织</span><span class="value">Cats</span></div>
+                <div class="info-item"><span class="label">组织</span><span class="value">TALT</span></div>
+
+                <div class="section-title">✦ 领地</div>
+                <div class="info-item"><span class="label">主领地</span><span class="value">Gyhbcz12</span></div>
+                <div class="info-item"><span class="label">领地</span><span class="value">momo'aple</span></div>
+                <div class="info-item"><span class="label">领地</span><span class="value">Gyhbcz12_APE_diyu</span></div>
+                <div class="info-item"><span class="label">领地</span><span class="value">APE_end</span></div>
+                <div class="info-item"><span class="label">领地</span><span class="value">APE_xp</span></div>
+
+                <div class="section-title">✦ 组织</div>
+                <div class="info-item"><span class="label">全称</span><span class="value">ApplePoleEquity</span></div>
+                <div class="info-item"><span class="label">简称</span><span class="value">APE</span></div>
+                <div class="info-item"><span class="label">QQ群</span><span class="value" style="color:#ffd700;">1102763876</span></div>
+                <div class="info-item"><span class="label">合作</span><span class="value" style="color:#81d4fa;">Cats、TALT</span></div>
+                <div class="info-item"><span class="label">建立时间</span><span class="value">2025.9.15</span></div>
+            </div>
+        </div>
+
+        <!-- ===== 相册区域（点击相册后显示） ===== -->
+        <div id="page-content-album" style="display:none;">
+            <div class="album-wrapper">
+                <div class="album-label">✦ G12 ✦</div>
+                <div class="flip-container" id="flip1">
+                    <div class="click-area click-area-left" onclick="nextPage1(-1)"></div>
+                    <div class="click-area click-area-right" onclick="nextPage1(1)"></div>
+                    <div class="flip-inner" id="flipInner1">
+                        <div class="flip-page cover-page" id="page1-0">
+                            <div class="title">G12</div>
+                            <div class="hint">点击翻页</div>
+                            <div class="page-number">封面</div>
+                        </div>
+                        <div class="flip-page back-cover" id="page1-12">
+                            <div class="back-title">APE clearx 基地</div>
+                            <div class="back-desc">
+                                /dom tp Gyhbcz12<br>
+                                历史长达 <span class="highlight">1 年+</span>
+                            </div>
+                            <div class="page-number" style="position:absolute; top:15px; right:20px;">封底</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="album-wrapper">
+                <div class="album-label">✦ momo ✦</div>
+                <div class="flip-container" id="flip2">
+                    <div class="click-area click-area-left" onclick="nextPage2(-1)"></div>
+                    <div class="click-area click-area-right" onclick="nextPage2(1)"></div>
+                    <div class="flip-inner" id="flipInner2">
+                        <div class="flip-page cover-page" id="page2-0">
+                            <div class="title">momo</div>
+                            <div class="hint">点击翻页</div>
+                            <div class="page-number">封面</div>
+                        </div>
+                        <div class="flip-page back-cover" id="page2-5">
+                            <div class="back-title">APE clearx 基地</div>
+                            <div class="back-desc">
+                                /dom tp momo'aple<br>
+                                历史长达 <span class="highlight">5-6 月</span><br>
+                                <span style="color: rgba(255,255,255,0.4); font-size:0.9rem;">建设中……</span>
+                            </div>
+                            <div class="page-number" style="position:absolute; top:15px; right:20px;">封底</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="album-wrapper">
+                <div class="album-label">✦ ban ✦</div>
+                <div class="flip-container" id="flip3">
+                    <div class="click-area click-area-left" onclick="nextPage3(-1)"></div>
+                    <div class="click-area click-area-right" onclick="nextPage3(1)"></div>
+                    <div class="flip-inner" id="flipInner3">
+                        <div class="flip-page cover-page" id="page3-0">
+                            <div class="title">ban</div>
+                            <div class="hint">点击翻页</div>
+                            <div class="page-number">封面</div>
+                        </div>
+                        <div class="flip-page back-cover" id="page3-5">
+                            <div class="back-title">ban 服基地</div>
+                            <div class="back-desc">
+                                放上来凑数，不归入 APE<br>
+                                之前和朋友建的
+                            </div>
+                            <div class="page-number" style="position:absolute; top:15px; right:20px;">封底</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="album-wrapper">
+                <div class="album-label">✦ 合照 ✦</div>
+                <div class="flip-container" id="flip4">
+                    <div class="click-area click-area-left" onclick="nextPage4(-1)"></div>
+                    <div class="click-area click-area-right" onclick="nextPage4(1)"></div>
+                    <div class="flip-inner" id="flipInner4">
+                        <div class="flip-page cover-page" id="page4-0">
+                            <div class="title">合照</div>
+                            <div class="hint">点击翻页</div>
+                            <div class="page-number">封面</div>
+                        </div>
+                        <div class="flip-page back-cover" id="page4-4">
+                            <div class="back-title">一些合照 ovo</div>
+                            <div class="page-number" style="position:absolute; top:15px; right:20px;">封底</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>&copy; 2026 APE Organization</footer>
+
+    <!-- ==================== 覆盖层 ==================== -->
+
+    <!-- 命令控制台 -->
+    <div id="cmd-overlay" onclick="if(event.target===this) closeCmd()">
+        <div id="cmd-box">
+            <div class="title">[ APE 终端 ]</div>
+            <div id="cmd-row"><input id="cmd-input" placeholder="输入命令..." autocomplete="off"><button id="cmd-send" onclick="sendCmd()">↵</button></div>
+            <div id="cmd-output"></div>
+            <div id="color-picker">
+                <div class="slider-group">
+                    <div class="slider-row"><label>H</label><input type="range" id="hue" min="0" max="360" value="0"></div>
+                    <div class="slider-row"><label>S</label><input type="range" id="sat" min="0" max="100" value="100"></div>
+                    <div class="slider-row"><label>B</label><input type="range" id="bri" min="0" max="100" value="50"></div>
+                </div>
+                <div class="preview-row"><div class="preview-color" id="color-preview"></div><span id="hex-display">#d32f2f</span></div>
+                <button class="apply-btn" onclick="applyColor()">应用颜色</button>
+            </div>
+            <div class="cmd-close" onclick="closeCmd()">点击外部关闭</div>
+        </div>
+    </div>
+
+    <!-- 用户中心 -->
+    <div id="uc-overlay" onclick="if(event.target===this) closeUserCenter()">
+        <div class="uc-box">
+            <img id="uc-avatar" class="avatar" src="" alt="avatar">
+            <div id="uc-edit-area">
+                <input id="uc-edit-name" placeholder="修改用户名" style="width:60%;">
+                <label for="uc-edit-avatar">更换头像</label>
+                <input type="file" id="uc-edit-avatar" accept="image/*" style="display:none;" onchange="handleUCAvatar(event)">
+                <button onclick="saveUCProfile()">保存修改</button>
+            </div>
+            <div class="name" id="uc-name">未登录</div>
+            <div class="actions"><button onclick="closeUserCenter()">返回</button><button class="logout" onclick="logoutUser()">登出</button></div>
+        </div>
+    </div>
+
+    <!-- 登录 -->
+    <div id="auth-overlay" onclick="if(event.target===this) closeAuth()">
+        <div id="auth-box">
+            <h3 id="auth-title">登录 APE</h3>
+            <input id="auth-username" class="input" placeholder="用户名">
+            <input id="auth-password" class="input" type="password" placeholder="密码">
+            <div class="avatar-upload-area">
+                <img id="auth-avatar-preview">
+                <label for="auth-avatar-input">选择头像图片</label>
+                <input type="file" id="auth-avatar-input" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
+            </div>
+            <button id="auth-btn" class="btn" onclick="handleAuth()">登录</button>
+            <div class="switch" onclick="toggleAuthMode()" id="auth-switch">没有账号？ <span>去注册</span></div>
+            <div class="close" onclick="closeAuth()">关闭</div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 工具函数 =====
+        const $ = (id) => document.getElementById(id);
+        const feedback = $('feedback');
+
+        // ===== 配置 =====
+        const SB = supabase.createClient(
+            'https://bmykwusmtkbowpfbeozn.supabase.co',
+            'sb_publishable_t-YpxPIgGInkdHxBFPVgGQ_1YQNbD0Z'
+        );
+        const CFG = {
+            apple: 'https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJjo2phySlpvW4OZHHDV6sOYnKXQhf4AAInHwACIU4IVxyr0tCYKR15PQQ.jpg',
+            gold: 'https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJjpGphyTRLCekIwnh6-1toBklkpYKjAAIoHwACIU4IV7XswYFVul5uPQQ.jpg',
+            secret: 'https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJjq2phzpXU18PkHYT7CWhN4SqlHOHqAAJJHwACIU4IV3C_tIdInzRxPQQ.jpg',
+            defBg: 'https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJjlmphuRscwj9R0MaQni-7XOirri88AALbHgACIU4IV0gh8irj1q93PQQ.jpg',
+            colors: { red:'#ff4444', gold:'#ffd700', blue:'#44aaff', green:'#44ff88', pink:'#ff66aa', cyan:'#44ffdd' }
+        };
+
+        // 背景图片列表
+        const BG_LIST = [
+            'https://bee-reg-ab.imagency.cn/p/82fce3ce9382c8cf887a428ab8a46b36.png',
+            'https://bee-reg-ab.imagency.cn/p/bf1ec49e364a4a91042e2561b6d78bdf.png',
+            'https://bee-reg-ab.imagency.cn/p/1bf49b509713f7f8ed3d34fba9caeb06.png',
+            'https://bee-reg-ab.imagency.cn/p/95592ec342f778eff8e8ba2d006d15a6.png',
+            'https://bee-reg-ab.imagency.cn/p/008e65700d57ad18a2ca3adf498f7710.png'
+        ];
+        let bgIndex = 0;
+
+        // ===== 状态 =====
+        let state = {
+            user: localStorage.getItem('ape_user') || null,
+            avatar: localStorage.getItem('ape_avatar') || null,
+            level: parseInt(localStorage.getItem('ape_level')) || 1,
+            apple: parseInt(localStorage.getItem('ape_apple')) || 0,
+            theme: localStorage.getItem('ape_theme') || '#d32f2f',
+            white: localStorage.getItem('ape_white') === 'true',
+            eat: localStorage.getItem('ape_eat') || 'lazy',
+            down: localStorage.getItem('ape_down') || 'tick',
+            count: parseInt(localStorage.getItem('ape_down_count')) || 1,
+            interval: null, storm: false, isLogin: true
+        };
+        if(state.white) document.body.classList.add('white-mode');
+        applyTheme(state.theme);
+
+        // ===== 背景切换 =====
+        function toggleBg() {
+            bgIndex = (bgIndex + 1) % BG_LIST.length;
+            document.documentElement.style.setProperty('--bg-image', `url('${BG_LIST[bgIndex]}')`);
+            // 重新应用背景
+            document.body.style.backgroundImage = `url('${BG_LIST[bgIndex]}')`;
+        }
+
+        // ===== 工具函数 =====
+        function showFeedback(m){ feedback.textContent=m; feedback.classList.add('show'); clearTimeout(feedback._t); feedback._t=setTimeout(()=>feedback.classList.remove('show'),1800); }
+        function saveState(){ localStorage.setItem('ape_level',state.level); localStorage.setItem('ape_apple',state.apple); $('level').textContent=`Lv.${state.level}`; $('progress-fill').style.width=`${(state.apple/10)*100}%`; }
+        function applyTheme(c){ let s=$('theme-style'); if(!s){s=document.createElement('style');s.id='theme-style';document.head.appendChild(s);} s.textContent=`:root{--primary:${c};--hover:${c}cc;--shadow:${c}66;}`; localStorage.setItem('ape_theme',c); }
+        function updateUI(){ 
+            const u=$('nav-user'); 
+            if(state.user){ 
+                u.textContent = `👤 ${state.user}`;
+            } else { 
+                u.textContent='登录 / 注册'; 
+            }
+        }
+
+        // ===== 苹果 =====
+        function eatApple(){ createApple(CFG.apple); }
+        function createApple(src, auto){
+            const c=document.createElement('div'); c.className='drop-img-container'; c.innerHTML=`<img src="${src}" style="width:60px;height:auto;border-radius:8px;display:block;">`;
+            c.style.cssText=`position:fixed;top:-120px;left:${Math.random()*(window.innerWidth-150)+50}px;z-index:999;cursor:pointer;user-select:none;transition:none;`;
+            document.body.appendChild(c);
+            setTimeout(()=>{ c.style.transition='all 1.8s cubic-bezier(0.22,1,0.36,1)'; c.style.top='calc(100vh - 160px)'; },50);
+            c.onclick=function(e){ if(c.classList.contains('clicked'))return; c.classList.add('clicked'); c.style.transition='all 0.6s cubic-bezier(0.4,0,0.2,1)'; c.style.transform='scale(0) rotate(90deg)'; c.style.opacity='0'; handleEat(src); setTimeout(()=>c.remove(),600); };
+            if(state.eat==='fast') c.onmouseenter=function(e){ if(c.classList.contains('clicked'))return; c.classList.add('clicked'); c.style.transition='all 0.6s cubic-bezier(0.4,0,0.2,1)'; c.style.transform='scale(0) rotate(90deg)'; c.style.opacity='0'; handleEat(src); setTimeout(()=>c.remove(),600); };
+        }
+        function handleEat(src){
+            if(src===CFG.apple){ state.apple++; if(state.apple>=10){state.apple=0;state.level++;showFeedback(`🎉 升级！Lv.${state.level}`);} saveState(); }
+            if(src===CFG.gold && !state.storm){
+                document.body.style.backgroundImage=`url('${CFG.secret}')`;
+                setTimeout(()=>document.body.style.backgroundImage=`url('${CFG.defBg}')`,10000);
+                if(state.storm) return;
+                state.storm=true; let c=0; const i=setInterval(()=>{ if(c>=15 || !state.storm){clearInterval(i);state.storm=false;return;} createApple(CFG.apple,true); c++; },200);
+                setTimeout(()=>{clearInterval(i);state.storm=false;},3000);
+            }
+        }
+
+        // ===== 用户中心 =====
+        let tempUcAvatarFile = null;
+        function openUserCenter(){ 
+            if(!state.user){ openAuth(); return; } 
+            const img = $('uc-avatar');
+            if(state.avatar) { img.src=state.avatar; img.style.display='block'; } else { img.style.display='none'; }
+            $('uc-name').textContent=state.user; 
+            $('uc-edit-name').value='';
+            tempUcAvatarFile = null;
+            $('uc-overlay').classList.add('active'); 
+        }
+        function closeUserCenter(){ $('uc-overlay').classList.remove('active'); }
+        
+        function handleUCAvatar(e){
+            const file = e.target.files[0];
+            if(!file) return;
+            tempUcAvatarFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => { $('uc-avatar').src = ev.target.result; $('uc-avatar').style.display = 'block'; };
+            reader.readAsDataURL(file);
+        }
+        
+        async function saveUCProfile(){
+            if(!state.user) return;
+            const newName = $('uc-edit-name').value.trim();
+            let newAvatarUrl = state.avatar;
+
+            if(tempUcAvatarFile){
+                const fileName = `${Date.now()}_${tempUcAvatarFile.name}`;
+                const {error:uploadError} = await SB.storage.from('avatars').upload(fileName, tempUcAvatarFile);
+                if(!uploadError){
+                    const {data:urlData} = SB.storage.from('avatars').getPublicUrl(fileName);
+                    newAvatarUrl = urlData.publicUrl;
+                }
+            }
+
+            if(newName && newName !== state.user){
+                const {data:check, error:checkErr} = await SB.from('users').select('username').eq('username', newName);
+                if(check && check.length > 0 && check[0].username !== state.user){
+                    alert('该用户名已被注册，请换一个');
+                    return;
+                }
+                const {error:updateErr} = await SB.from('users').update({username: newName}).eq('username', state.user);
+                if(updateErr){ alert('修改名字失败'); return; }
+                state.user = newName;
+                localStorage.setItem('ape_user', newName);
+            }
+
+            if(newAvatarUrl !== state.avatar){
+                const {error:updateErr} = await SB.from('users').update({avatar_url: newAvatarUrl}).eq('username', state.user);
+                if(!updateErr){
+                    state.avatar = newAvatarUrl;
+                    localStorage.setItem('ape_avatar', newAvatarUrl);
+                }
+            }
+            closeUserCenter();
+            updateUI();
+            alert('个人信息已更新');
+        }
+
+        function logoutUser(){ if(!confirm('退出登录？'))return; state.user=null; state.avatar=null; localStorage.removeItem('ape_user'); localStorage.removeItem('ape_avatar'); closeUserCenter(); updateUI(); }
+
+        // ===== 登录 =====
+        let tempAvatarFile = null;
+        function previewAvatar(e){
+            const file = e.target.files[0];
+            if(!file) return;
+            tempAvatarFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => { $('auth-avatar-preview').src = ev.target.result; $('auth-avatar-preview').style.display = 'block'; };
+            reader.readAsDataURL(file);
+        }
+        function openAuth(){ $('auth-overlay').classList.add('active'); $('auth-username').value=''; $('auth-password').value=''; $('auth-avatar-preview').style.display='none'; tempAvatarFile=null; $('auth-avatar-input').value=''; }
+        function closeAuth(){ $('auth-overlay').classList.remove('active'); }
+        function toggleAuthMode(){ state.isLogin=!state.isLogin; $('auth-title').textContent=state.isLogin?'登录 APE':'注册 APE'; $('auth-btn').textContent=state.isLogin?'登录':'注册'; $('auth-switch').innerHTML=state.isLogin?'没有账号？ <span>去注册</span>':'已有账号？ <span>去登录</span>'; }
+        
+        async function handleAuth(){
+            const btn = $('auth-btn');
+            const originalText = btn.textContent;
+            
+            // 加转圈动画 + 禁用按钮
+            btn.innerHTML = '<span class="loading-spinner"></span>处理中...';
+            btn.classList.add('loading');
+            
+            const u=$('auth-username').value.trim(), p=$('auth-password').value.trim();
+            if(!u||!p){
+                alert('用户名和密码不能为空');
+                btn.textContent = originalText;
+                btn.classList.remove('loading');
+                return;
+            }
+            
+            try {
+                const {data:ex,error:fe}=await SB.from('users').select('*').eq('username',u);
+                
+                if(state.isLogin){
+                    // ===== 登录 =====
+                    if(fe||!ex||ex.length===0){
+                        alert('用户名或密码错误');
+                        btn.textContent = originalText;
+                        btn.classList.remove('loading');
+                        return;
+                    }
+                    // 明文密码比对
+                    if(ex[0].password !== p){
+                        alert('用户名或密码错误');
+                        btn.textContent = originalText;
+                        btn.classList.remove('loading');
+                        return;
+                    }
+                    state.user=u; 
+                    state.avatar=ex[0].avatar_url||null; 
+                    state.level=ex[0].level||1; 
+                    localStorage.setItem('ape_user',u); 
+                    if(state.avatar) localStorage.setItem('ape_avatar',state.avatar); 
+                    localStorage.setItem('ape_level',state.level); 
+                    closeAuth(); 
+                    updateUI(); 
+                } else {
+                    // ===== 注册 =====
+                    if(ex&&ex.length>0){
+                        alert('用户名已被注册');
+                        btn.textContent = originalText;
+                        btn.classList.remove('loading');
+                        return;
+                    }
+                    let avatarUrl = null;
+                    if(tempAvatarFile){
+                        const fileName = `${Date.now()}_${tempAvatarFile.name}`;
+                        const {error:uploadError} = await SB.storage.from('avatars').upload(fileName, tempAvatarFile);
+                        if(!uploadError){
+                            const {data:urlData} = SB.storage.from('avatars').getPublicUrl(fileName);
+                            avatarUrl = urlData.publicUrl;
+                        }
+                    }
+                    
+                    const {error:ie}=await SB.from('users').insert({
+                        username:u,
+                        password:p,  // 明文存储
+                        avatar_url:avatarUrl,
+                        level:1
+                    });
+                    if(ie){
+                        alert('注册失败:'+ie.message);
+                        btn.textContent = originalText;
+                        btn.classList.remove('loading');
+                        return;
+                    }
+                    state.user=u; 
+                    state.avatar=avatarUrl; 
+                    state.level=1; 
+                    localStorage.setItem('ape_user',u); 
+                    if(avatarUrl) localStorage.setItem('ape_avatar',avatarUrl); 
+                    localStorage.setItem('ape_level','1'); 
+                    closeAuth(); 
+                    updateUI(); 
+                    alert('🎉 欢迎加入 '+u);
+                }
+            } catch(err) {
+                alert('操作失败，请重试');
+            } finally {
+                btn.textContent = originalText;
+                btn.classList.remove('loading');
+            }
+        }
+
+        // ===== 颜色选择器 =====
+        function hslToHex(h,s,l){ s/=100;l/=100; let c=(1-Math.abs(2*l-1))*s,x=c*(1-Math.abs((h/60)%2-1)),m=l-c/2; let [r,g,b]=h<60?[c,x,0]:h<120?[x,c,0]:h<180?[0,c,x]:h<240?[0,x,c]:h<300?[x,0,c]:[c,0,x]; return '#'+[r,g,b].map(v=>Math.round((v+m)*255).toString(16).padStart(2,'0')).join(''); }
+        function updateColor(){ const h=parseInt($('hue').value),s=parseInt($('sat').value),b=parseInt($('bri').value); const col=hslToHex(h,s,b); $('color-preview').style.background=col; $('hex-display').textContent=col; return col; }
+        ['hue','sat','bri'].forEach(id=>$(id).addEventListener('input',()=>{ state.theme=updateColor(); }));
+        function applyColor(){ const c=updateColor(); applyTheme(c); closeCmd(); }
+
+        // ===== 命令 =====
+        function openCmd(){ $('cmd-overlay').classList.add('active'); $('cmd-input').value=''; $('cmd-output').textContent=''; $('color-picker').classList.remove('active'); $('cmd-input').focus(); }
+        function closeCmd(){ $('cmd-overlay').classList.remove('active'); $('color-picker').classList.remove('active'); }
+        function sendCmd(){ const v=$('cmd-input').value.trim(); if(v) execCmd(v); $('cmd-input').value=''; }
+        function execCmd(cmd){
+            const out=$('cmd-output'); out.className='';
+            // /down tick
+            const tm=cmd.match(/^\/down tick (\d+)$/);
+            if(tm){ const n=parseInt(tm[1]); if(n>0){state.count=n;localStorage.setItem('ape_down_count',n); out.textContent=`✓ 点击模式，每次 ${n} 个`;out.className='success';return;} }
+            // /level x
+            const lm=cmd.match(/^\/level (\d+)$/);
+            if(lm){ const newLevel=parseInt(lm[1]); if(newLevel>0 && state.user){ state.level=newLevel; localStorage.setItem('ape_level',newLevel); saveState(); out.textContent=`✓ 等级已修改为 Lv.${newLevel}`; out.className='success'; return;} else if(!state.user){ out.textContent='✗ 请先登录'; out.className='error'; return;} }
+            // /see
+            if(cmd==='/see'){
+                const tc=getComputedStyle(document.documentElement).getPropertyValue('--primary').trim()||'#d32f2f';
+                const md=document.body.classList.contains('white-mode')?'浅色':'深色';
+                const ua = navigator.userAgent;
+                let device = '未知设备';
+                let os = '未知系统';
+                if(ua.includes('Macintosh')) { device = 'MacBook Pro / Mac'; os = 'macOS'; }
+                else if(ua.includes('Windows NT')) { device = 'Windows PC'; os = 'Windows'; }
+                else if(ua.includes('iPhone')) { device = 'iPhone'; os = 'iOS'; }
+                else if(ua.includes('Android')) { device = 'Android 手机'; os = 'Android'; }
+                else if(ua.includes('Linux')) { device = 'Linux 设备'; os = 'Linux'; }
+
+                out.innerHTML=`<strong>📋 APE 系统状态</strong><br>${'-'.repeat(30)}<br>👤 用户: ${state.user||'未登录'}<br>🖼️ 头像: ${state.avatar?'已设置':'未设置'}<br>🏷️ 等级: Lv.${state.level}<br>🍎 苹果: ${state.apple}/10<br>🎨 主题: ${tc} (${md}模式)<br>💻 设备: ${device}<br>🖥️ 系统: ${os}<br>📱 屏幕: ${window.screen.width}x${window.screen.height}<br>${'-'.repeat(30)}<br>✅ 系统运行正常`;
+                out.className='success'; return; 
+            }
+            // //cc
+            if(cmd==='//cc'){ const k=['ape_theme','ape_white','ape_level','ape_apple','ape_eat','ape_down','ape_down_count']; let r='📦 本地存储:\n'; k.forEach(kk=>{const v=localStorage.getItem(kk); r+=`${kk}: ${v||'(空)'}\n`;}); out.textContent=r; out.className='success'; return; }
+            // map
+            const map={
+                '/help':()=>{out.innerHTML='<strong>✨ APE 命令列表 (一级)</strong><br><br>• /fast — 纯黑背景<br>• /bk — 恢复默认<br>• /colour — 打开颜色选择器<br>• /eat fast — 悬停即吃<br>• /eat lazy — 点击才吃<br>• /apple gold — 5颗金苹果<br>• /apple red — 10颗普通苹果<br>• /black — 深色模式<br>• /white — 浅色模式<br>• /down away red — 持续掉普通苹果<br>• /down away gold — 持续掉金苹果<br>• /down tick — 点击掉1个<br>• /down tick x — 点击掉x个<br>• /level x — 修改等级<br>• /see — 查看系统状态';out.className='success';},
+                '//help':()=>{out.innerHTML='<strong>✨ APE 命令列表 (二级)</strong><br><br>• //fast — 极简模式<br>• //cc — 查看本地存储';out.className='success';},
+                '/fast':()=>{document.body.classList.add('mode-fast');document.body.classList.remove('mode-ultra');},
+                '//fast':()=>{document.body.classList.add('mode-ultra');document.body.classList.remove('mode-fast');},
+                '/bk':()=>{document.body.classList.remove('mode-fast','mode-ultra','white-mode');document.getElementById('theme-style')?.remove(); state.white=false;state.eat='lazy';state.count=1;localStorage.setItem('ape_white','false');localStorage.setItem('ape_eat','lazy');localStorage.setItem('ape_down','tick');localStorage.setItem('ape_down_count','1');state.level=1;state.apple=0;saveState();showFeedback('已恢复默认');},
+                '/colour':()=>{$('color-picker').classList.add('active');},
+                '/eat fast':()=>{state.eat='fast';localStorage.setItem('ape_eat','fast');out.textContent='✓ 快速模式';out.className='success';},
+                '/eat lazy':()=>{state.eat='lazy';localStorage.setItem('ape_eat','lazy');out.textContent='✓ 点击模式';out.className='success';},
+                '/apple gold':()=>{for(let i=0;i<5;i++)setTimeout(()=>createApple(CFG.gold),i*150);},
+                '/apple red':()=>{for(let i=0;i<10;i++)setTimeout(()=>createApple(CFG.apple),i*80);},
+                '/black':()=>{document.body.classList.remove('white-mode');state.white=false;localStorage.setItem('ape_white','false');},
+                '/white':()=>{document.body.classList.add('white-mode');state.white=true;localStorage.setItem('ape_white','true');},
+                '/down away red':()=>{localStorage.setItem('ape_down','away_red');out.textContent='✓ 持续普通苹果';out.className='success';},
+                '/down away gold':()=>{localStorage.setItem('ape_down','away_gold');out.textContent='✓ 持续金苹果';out.className='success';},
+                '/down tick':()=>{state.count=1;localStorage.setItem('ape_down','tick');localStorage.setItem('ape_down_count','1');out.textContent='✓ 点击1个';out.className='success';}
+            };
+            if(map[cmd]){map[cmd]();return;}
+            out.textContent=`未知: ${cmd}`; out.className='error';
+        }
+
+        // ===== 相册切换 =====
+        function openAlbum() {
+            document.getElementById('page-home').style.display = 'none';
+            document.getElementById('page-content-home').style.display = 'none';
+            document.getElementById('page-content-album').style.display = 'block';
+            // 加载相册数据
+            buildAlbum1(); updatePage1(0);
+            buildAlbum2(); updatePage2(0);
+            buildAlbum3(); updatePage3(0);
+            buildAlbum4(); updatePage4(0);
+        }
+
+        // ===== 返回主页 =====
+        function goToHome() {
+            // 显示主页内容，隐藏相册
+            document.getElementById('page-home').style.display = 'flex';
+            document.getElementById('page-content-home').style.display = 'block';
+            document.getElementById('page-content-album').style.display = 'none';
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ===== 相册数据 =====
+        const images1 = [
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmgmpx86h4nAyCuyfhRPydqBCAYJ7cAAKVHgAClAmRV2x6ZrCk4yyRPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmg2px86lUf-HxEP5t0noCJuJNEIAPAAKWHgAClAmRV6Jauo3_3ZoWPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmhGpx86pGlx_oLO8isnbcgj3Ir-XUAAKXHgAClAmRV1ZhUiuAkZt9PQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmhWpx86tiDvrtQP1LO99npYFa0wetAAKYHgAClAmRVzcgXZVzxqwUPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmhmpx86x9A4lhQ551Oke7j-QRkgyYAAKZHgAClAmRV22DUSpLGDFvPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmh7px864-X3cBh0SfrLJn-z2Uy4PBAAKaHgAClAmRV1TRcteCIt3KPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmiGpx86_PpfmsUmwrJb1NHcFD2Ry9AAKbHgAClAmRV5QVu9bvk3SbPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmiWpx86_EjvQY0prAWOTXsc2U2NU5AAKcHgAClAmRV4GdJoEoaKw-PQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmimpx87OL9IeYhnbVB6VdZn4i8IK1AAKdHgAClAmRVw6PaG6oigABhD0E.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmi2px87RGECqmxNlKmx3wovKN5JeiAAKeHgAClAmRVz_k8X47a1mpPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmjGpx87WC6PLCgIz6tJAQEj-D-IcsAAKfHgAClAmRV8Lro0H1Qql_PQQ.jpg"
+        ];
+        const images2 = [
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmjWpx9BoX-tGAYVU_F8vkAmjeM1tVAAKgHgAClAmRV1YCkOPUrRC9PQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmjmpx9Bsgsd0RAkQaUH-_I1-bStbkAAKhHgAClAmRV8o0T7P7JOQiPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmj2px9Bx8uZMZk0P_NSBK3_V7H9G7AAKiHgAClAmRV7Uf_TbtHpo-PQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmkGpx9B3TurrQk70DJSGIpub5aOJ8AAKjHgAClAmRV9ErHfAVBaEEPQQ.jpg"
+        ];
+        const images3 = [
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmkWpx9EmUTNo2YB70RaIdOZtfkZUxAAKkHgAClAmRV9q1UZl_dLGsPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmkmpx9EpabGwKlEVR-Peazj11bBzrAAKlHgAClAmRV7rYCqglf0QePQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmk2px9EuNDPjwFVHV5BDVpHz8wwniAAKmHgAClAmRVx4rfyAwO4OCPQQ.jpg",
+            "https://piv.cc.cd/file/BQACAgUAAyEGAASLVN5eAAJmlGpx9ExJatY4PcuJ-ZRku1SrkRXrAAKnHgAClAmRVxv79__F_5i7PQQ.jpg"
+        ];
+        const images4 = [
+            "https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJjnGphuSFY1mNYqOi2FVbwdPiUB1V_AALhHgACIU4IV3vZYYhPyKoMPQQ.jpg",
+            "https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJkKmpi04bI9019merD9dauQrBVO-21AAJKJQACIU4QV1G0SlhJNvwRPQQ.jpg",
+            "https://img2.nloln.de/file/BQACAgUAAyEGAASLVN5eAAJkK2pi04fdWDAwigABNyFcQDB5Bbc8VgACSyUAAiFOEFehzeWYgvGLlj0E.jpg"
+        ];
+
+        // ===== 通用翻页函数 =====
+        function flipPage(flipInner, direction, total, current, pageNames, setCurrent) {
+            const allPages = flipInner.querySelectorAll('.flip-page');
+            const currentPage = allPages[current];
+
+            let newIndex = current + direction;
+            if (newIndex < 0) newIndex = total - 1;
+            if (newIndex >= total) newIndex = 0;
+
+            const nextPage = allPages[newIndex];
+
+            allPages.forEach(p => p.classList.remove('slide-out-left', 'slide-in-right', 'active'));
+            currentPage.classList.remove('hidden');
+
+            if (direction === 1) {
+                currentPage.classList.add('slide-out-left');
+                setTimeout(() => {
+                    currentPage.classList.add('hidden');
+                    currentPage.classList.remove('slide-out-left');
+                }, 250);
+
+                nextPage.classList.remove('hidden');
+                nextPage.classList.add('slide-in-right');
+                requestAnimationFrame(() => {
+                    nextPage.classList.add('active');
+                });
+            } else {
+                currentPage.classList.add('slide-out-left');
+                setTimeout(() => {
+                    currentPage.classList.add('hidden');
+                    currentPage.classList.remove('slide-out-left');
+                }, 250);
+
+                nextPage.classList.remove('hidden');
+                nextPage.classList.add('slide-in-right');
+                requestAnimationFrame(() => {
+                    nextPage.classList.add('active');
+                });
+            }
+
+            const pageNumberEl = nextPage.querySelector('.page-number');
+            if (pageNumberEl) {
+                pageNumberEl.textContent = pageNames[newIndex] || `${newIndex} / ${total - 2}`;
+            }
+
+            setCurrent(newIndex);
+            return newIndex;
+        }
+
+        // ===== 相册1：G12 =====
+        let current1 = 0;
+        const total1 = 13;
+        const flipInner1 = document.getElementById('flipInner1');
+        const pageNames1 = ['封面', ...Array.from({ length: images1.length }, (_, i) => `${i + 1} / ${images1.length}`), '封底'];
+
+        function buildAlbum1() {
+            const cover = document.getElementById('page1-0');
+            const back = document.getElementById('page1-12');
+            const existing = flipInner1.querySelectorAll('.flip-page:not(#page1-0):not(#page1-12)');
+            existing.forEach(el => el.remove());
+
+            for (let i = 0; i < images1.length; i++) {
+                const page = document.createElement('div');
+                page.className = 'flip-page';
+                page.id = `page1-${i + 1}`;
+                page.innerHTML = `<img src="${images1[i]}" alt="${i + 1}">`;
+                page.innerHTML += `<div class="page-number">${pageNames1[i + 1]}</div>`;
+                flipInner1.insertBefore(page, back);
+            }
+        }
+
+        function updatePage1(index) {
+            const allPages = flipInner1.querySelectorAll('.flip-page');
+            allPages.forEach(p => p.classList.add('hidden'));
+            const current = document.getElementById(`page1-${index}`);
+            if (current) current.classList.remove('hidden');
+            const pageNumberEl = current?.querySelector('.page-number');
+            if (pageNumberEl) pageNumberEl.textContent = pageNames1[index];
+        }
+
+        function nextPage1(direction) {
+            if (direction === 1) {
+                if (current1 < total1 - 1) {
+                    current1 = flipPage(flipInner1, 1, total1, current1, pageNames1, (v) => current1 = v);
+                } else {
+                    current1 = 0;
+                    updatePage1(current1);
+                }
+            } else {
+                if (current1 > 0) {
+                    current1 = flipPage(flipInner1, -1, total1, current1, pageNames1, (v) => current1 = v);
+                } else {
+                    current1 = total1 - 1;
+                    updatePage1(current1);
+                }
+            }
+        }
+
+        // ===== 相册2：momo =====
+        let current2 = 0;
+        const total2 = 6;
+        const flipInner2 = document.getElementById('flipInner2');
+        const pageNames2 = ['封面', ...Array.from({ length: images2.length }, (_, i) => `${i + 1} / ${images2.length}`), '封底'];
+
+        function buildAlbum2() {
+            const cover = document.getElementById('page2-0');
+            const back = document.getElementById('page2-5');
+            const existing = flipInner2.querySelectorAll('.flip-page:not(#page2-0):not(#page2-5)');
+            existing.forEach(el => el.remove());
+
+            for (let i = 0; i < images2.length; i++) {
+                const page = document.createElement('div');
+                page.className = 'flip-page';
+                page.id = `page2-${i + 1}`;
+                page.innerHTML = `<img src="${images2[i]}" alt="${i + 1}">`;
+                page.innerHTML += `<div class="page-number">${pageNames2[i + 1]}</div>`;
+                flipInner2.insertBefore(page, back);
+            }
+        }
+
+        function updatePage2(index) {
+            const allPages = flipInner2.querySelectorAll('.flip-page');
+            allPages.forEach(p => p.classList.add('hidden'));
+            const current = document.getElementById(`page2-${index}`);
+            if (current) current.classList.remove('hidden');
+            const pageNumberEl = current?.querySelector('.page-number');
+            if (pageNumberEl) pageNumberEl.textContent = pageNames2[index];
+        }
+
+        function nextPage2(direction) {
+            if (direction === 1) {
+                if (current2 < total2 - 1) {
+                    current2 = flipPage(flipInner2, 1, total2, current2, pageNames2, (v) => current2 = v);
+                } else {
+                    current2 = 0;
+                    updatePage2(current2);
+                }
+            } else {
+                if (current2 > 0) {
+                    current2 = flipPage(flipInner2, -1, total2, current2, pageNames2, (v) => current2 = v);
+                } else {
+                    current2 = total2 - 1;
+                    updatePage2(current2);
+                }
+            }
+        }
+
+        // ===== 相册3：ban =====
+        let current3 = 0;
+        const total3 = 6;
+        const flipInner3 = document.getElementById('flipInner3');
+        const pageNames3 = ['封面', ...Array.from({ length: images3.length }, (_, i) => `${i + 1} / ${images3.length}`), '封底'];
+
+        function buildAlbum3() {
+            const cover = document.getElementById('page3-0');
+            const back = document.getElementById('page3-5');
+            const existing = flipInner3.querySelectorAll('.flip-page:not(#page3-0):not(#page3-5)');
+            existing.forEach(el => el.remove());
+
+            for (let i = 0; i < images3.length; i++) {
+                const page = document.createElement('div');
+                page.className = 'flip-page';
+                page.id = `page3-${i + 1}`;
+                page.innerHTML = `<img src="${images3[i]}" alt="${i + 1}">`;
+                page.innerHTML += `<div class="page-number">${pageNames3[i + 1]}</div>`;
+                flipInner3.insertBefore(page, back);
+            }
+        }
+
+        function updatePage3(index) {
+            const allPages = flipInner3.querySelectorAll('.flip-page');
+            allPages.forEach(p => p.classList.add('hidden'));
+            const current = document.getElementById(`page3-${index}`);
+            if (current) current.classList.remove('hidden');
+            const pageNumberEl = current?.querySelector('.page-number');
+            if (pageNumberEl) pageNumberEl.textContent = pageNames3[index];
+        }
+
+        function nextPage3(direction) {
+            if (direction === 1) {
+                if (current3 < total3 - 1) {
+                    current3 = flipPage(flipInner3, 1, total3, current3, pageNames3, (v) => current3 = v);
+                } else {
+                    current3 = 0;
+                    updatePage3(current3);
+                }
+            } else {
+                if (current3 > 0) {
+                    current3 = flipPage(flipInner3, -1, total3, current3, pageNames3, (v) => current3 = v);
+                } else {
+                    current3 = total3 - 1;
+                    updatePage3(current3);
+                }
+            }
+        }
+
+        // ===== 相册4：合照 =====
+        let current4 = 0;
+        const total4 = 5;
+        const flipInner4 = document.getElementById('flipInner4');
+        const pageNames4 = ['封面', ...Array.from({ length: images4.length }, (_, i) => `${i + 1} / ${images4.length}`), '封底'];
+
+        function buildAlbum4() {
+            const cover = document.getElementById('page4-0');
+            const back = document.getElementById('page4-4');
+            const existing = flipInner4.querySelectorAll('.flip-page:not(#page4-0):not(#page4-4)');
+            existing.forEach(el => el.remove());
+
+            for (let i = 0; i < images4.length; i++) {
+                const page = document.createElement('div');
+                page.className = 'flip-page';
+                page.id = `page4-${i + 1}`;
+                page.innerHTML = `<img src="${images4[i]}" alt="${i + 1}">`;
+                page.innerHTML += `<div class="page-number">${pageNames4[i + 1]}</div>`;
+                flipInner4.insertBefore(page, back);
+            }
+        }
+
+        function updatePage4(index) {
+            const allPages = flipInner4.querySelectorAll('.flip-page');
+            allPages.forEach(p => p.classList.add('hidden'));
+            const current = document.getElementById(`page4-${index}`);
+            if (current) current.classList.remove('hidden');
+            const pageNumberEl = current?.querySelector('.page-number');
+            if (pageNumberEl) pageNumberEl.textContent = pageNames4[index];
+        }
+
+        function nextPage4(direction) {
+            if (direction === 1) {
+                if (current4 < total4 - 1) {
+                    current4 = flipPage(flipInner4, 1, total4, current4, pageNames4, (v) => current4 = v);
+                } else {
+                    current4 = 0;
+                    updatePage4(current4);
+                }
+            } else {
+                if (current4 > 0) {
+                    current4 = flipPage(flipInner4, -1, total4, current4, pageNames4, (v) => current4 = v);
+                } else {
+                    current4 = total4 - 1;
+                    updatePage4(current4);
+                }
+            }
+        }
+
+        // ===== 挂载 =====
+        $('cmd-input').addEventListener('keydown',e=>{if(e.key==='Enter')sendCmd();});
+        document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCmd();});
+        window.toggleBg = toggleBg;
+        window.eatApple=eatApple; window.openCmd=openCmd; window.closeCmd=closeCmd; window.sendCmd=sendCmd;
+        window.applyColor=applyColor; 
+        window.openAuth=openAuth; window.closeAuth=closeAuth; window.toggleAuthMode=toggleAuthMode; window.handleAuth=handleAuth;
+        window.openUserCenter=openUserCenter; window.closeUserCenter=closeUserCenter; window.logoutUser=logoutUser;
+        window.previewAvatar=previewAvatar; window.handleUCAvatar=handleUCAvatar; window.saveUCProfile=saveUCProfile;
+        window.scrollToTop=()=>window.scrollTo({top:0,behavior:'smooth'});
+        window.openAlbum = openAlbum;
+        window.goToHome = goToHome;
+        updateUI(); saveState();
+
+        // ===== 在新窗口打开论坛 =====
+        function openForumNewTab() {
+            window.open('/chat.html', '_blank');
+        }
+    </script>
+</body>
+</html>
