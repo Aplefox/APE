@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>APE · 藏书阁</title>
+<link rel="icon" type="image/png" href="https://s3.bmp.ovh/2026/09/02/yCkTXnjy.png">
+<link rel="preconnect" href="https://fonts.font.im">
+<link href="https://fonts.font.im/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    :root {
+        --primary: #888;
+        --bg: #0a0a0f;
+        --text: #f0f0f5;
+        --text-secondary: rgba(255,255,255,0.6);
+        --text-tertiary: rgba(255,255,255,0.3);
+        --border: rgba(255,255,255,0.08);
+        --card-bg: rgba(10,10,15,0.55);
+        --card-hover: rgba(20,20,26,0.7);
+        --radius: 16px;
+    }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-weight: 400;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    #particles {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: 1;
+        pointer-events: none;
+        display: block;
+    }
+
+    .hero-bg {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 80vh;
+        background-image: url('https://img.remit.ee/i/yafwESSXIq7q');
+        background-position: center top;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-color: var(--bg);
+        z-index: 0;
+        pointer-events: none;
+    }
+    .hero-bg::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to bottom,
+            rgba(10,10,15,0.35) 0%,
+            rgba(10,10,15,0.6) 55%,
+            rgba(10,10,15,0.9) 85%,
+            rgba(10,10,15,1) 100%
+        );
+        pointer-events: none;
+    }
+
+    .content, .top-bar { position: relative; z-index: 2; }
+
+    /* 顶栏：阅读时隐藏 */
+    .top-bar {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+        transition: opacity 0.25s, transform 0.25s;
+    }
+    .top-bar.hidden {
+        opacity: 0;
+        transform: translateY(-10px);
+        pointer-events: none;
+    }
+    .top-bar .back-btn {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 10px;
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        display: flex; align-items: center;
+        white-space: nowrap;
+    }
+    .top-bar .back-btn:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .top-bar .avatar-btn {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(10,10,15,0.7);
+        cursor: pointer;
+        overflow: hidden;
+        transition: background 0.15s, border-color 0.15s;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 500;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+    .top-bar .avatar-btn:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .top-bar .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+    .top-bar .lang-select {
+        height: 40px;
+        padding: 0 32px 0 14px;
+        border-radius: 10px;
+        background-color: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        transition: background-color 0.15s, color 0.15s;
+    }
+    .top-bar .lang-select:hover { background-color: rgba(20,20,26,0.9); color: #fff; }
+    .top-bar .lang-select option { background: var(--bg); color: var(--text); }
+
+    /* 主体 */
+    .content {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 220px 48px 80px;
+    }
+
+    .page-title {
+        font-size: clamp(48px, 10vw, 110px);
+        font-weight: 700;
+        letter-spacing: -3px;
+        line-height: 1;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 16px;
+    }
+    .page-sub {
+        font-size: 13px;
+        font-weight: 300;
+        color: var(--text-tertiary);
+        letter-spacing: 4px;
+        margin-bottom: 56px;
+    }
+
+    .page-actions {
+        display: flex; gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+    }
+    .page-actions button {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 20px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .page-actions button:hover {
+        background: var(--card-hover);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .page-actions button.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .page-actions button.primary:hover { background: #999; border-color: #999; }
+
+    .library-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+        gap: 18px;
+    }
+    .book-card {
+        aspect-ratio: 9 / 12;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 10px 8px;
+        transition: background 0.15s, border-color 0.15s;
+        cursor: pointer;
+        display: flex; flex-direction: column;
+        justify-content: center; align-items: center;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .book-card:hover {
+        background: var(--card-hover);
+        border-color: rgba(255,255,255,0.18);
+    }
+    .book-card .cover {
+        position: absolute; inset: 0;
+        z-index: 0;
+        border-radius: var(--radius);
+    }
+    .book-card .cover-content {
+        position: relative; z-index: 1;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        height: 100%; width: 100%;
+        padding: 12px;
+        text-shadow: 0 2px 12px rgba(0,0,0,0.6);
+    }
+    .book-card .book-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.85);
+        letter-spacing: 0.3px;
+        line-height: 1.35;
+        margin-bottom: 4px;
+        word-break: break-word;
+        max-height: 3.6em;
+        overflow: hidden;
+    }
+    .book-card .book-author {
+        font-size: 11px;
+        color: rgba(255,255,255,0.55);
+        font-weight: 300;
+        letter-spacing: 0.3px;
+    }
+    .book-card .book-status {
+        position: absolute;
+        top: 8px; right: 8px;
+        z-index: 2;
+        font-size: 10px;
+        padding: 2px 8px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.6);
+        color: rgba(255,255,255,0.7);
+        letter-spacing: 0.5px;
+    }
+    .book-card .book-status.published { color: #69db7c; }
+    .book-card .book-status.draft { color: #ffd43b; }
+    .book-card .pin-badge {
+        position: absolute;
+        top: 8px; left: 8px;
+        z-index: 2;
+        font-size: 12px;
+        color: #ffd700;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--text-tertiary);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.6; }
+    .empty-state .text { font-size: 14px; letter-spacing: 2px; font-weight: 300; }
+
+    /* 编辑页 */
+    #editor-page { display: none; animation: fadeSlide 0.3s ease; }
+    @keyframes fadeSlide {
+        0% { opacity: 0; transform: translateY(12px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    #editor-page .editor-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 32px;
+    }
+    #editor-page .editor-header h2 {
+        font-size: 22px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.85);
+        letter-spacing: -0.3px;
+    }
+    #editor-page .editor-header .editor-actions {
+        display: flex; gap: 10px;
+        flex-wrap: wrap;
+    }
+    #editor-page .editor-header .editor-actions button {
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #editor-page .editor-header .editor-actions .save-draft {
+        background: var(--card-bg);
+        color: var(--text-secondary);
+    }
+    #editor-page .editor-header .editor-actions .save-draft:hover {
+        background: var(--card-hover);
+        color: #fff;
+    }
+    #editor-page .editor-header .editor-actions .publish-btn {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    #editor-page .editor-header .editor-actions .publish-btn:hover {
+        background: #999;
+        border-color: #999;
+    }
+    #editor-page .editor-header .editor-actions .cancel-btn {
+        background: transparent;
+        color: var(--text-tertiary);
+    }
+    #editor-page .editor-header .editor-actions .cancel-btn:hover {
+        background: var(--card-bg);
+        color: var(--text-secondary);
+    }
+    .editor-form {
+        display: flex; flex-direction: column;
+        gap: 24px;
+    }
+    .editor-form .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    .editor-form label {
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 10px;
+    }
+    .editor-form input,
+    .editor-form textarea {
+        width: 100%;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        transition: border-color 0.15s, background 0.15s;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .editor-form input:focus,
+    .editor-form textarea:focus {
+        border-color: rgba(255,255,255,0.2);
+        background: var(--card-hover);
+    }
+    .editor-form input[type="color"] { padding: 4px; height: 48px; cursor: pointer; }
+    .editor-form textarea { min-height: 80px; resize: vertical; }
+    .chapters-list {
+        display: flex; flex-direction: column;
+        gap: 10px; margin-top: 8px;
+    }
+    .chapter-item {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        transition: background 0.15s, border-color 0.15s;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .chapter-item:hover {
+        background: var(--card-hover);
+        border-color: rgba(255,255,255,0.12);
+    }
+    .chapter-item .ch-title {
+        font-weight: 500;
+        font-size: 14px;
+        color: rgba(255,255,255,0.85);
+        cursor: pointer;
+        flex: 1;
+        min-width: 120px;
+        letter-spacing: 0.3px;
+    }
+    .chapter-item .ch-title:hover { color: var(--primary); }
+    .chapter-item .ch-actions { display: flex; gap: 6px; flex-wrap: nowrap; }
+    .chapter-item .ch-actions button {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 10px;
+        color: var(--text-tertiary);
+        font-size: 12px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s;
+        min-width: 32px;
+    }
+    .chapter-item .ch-actions button:hover { background: var(--card-bg); color: #fff; }
+    .chapter-item .ch-actions button.danger:hover { background: rgba(231,76,60,0.2); color: #ff6b6b; }
+    .chapter-item .ch-actions .edit-chapter-btn {
+        border-color: rgba(136,136,136,0.3);
+        color: var(--primary);
+    }
+    .chapter-item .ch-actions .edit-chapter-btn:hover { background: var(--primary); color: #fff; }
+    .add-chapter-btn {
+        background: transparent;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        color: var(--text-tertiary);
+        font-size: 13px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        text-align: center;
+        width: 100%;
+        margin-top: 8px;
+    }
+    .add-chapter-btn:hover {
+        background: var(--card-bg);
+        color: #fff;
+        border-color: rgba(255,255,255,0.18);
+    }
+
+    /* Quill 编辑器 */
+    .ql-toolbar.ql-snow {
+        border: 1px solid var(--border) !important;
+        border-radius: 10px 10px 0 0 !important;
+        background: var(--card-bg);
+        padding: 12px 14px !important;
+        backdrop-filter: blur(12px);
+    }
+    .ql-toolbar.ql-snow .ql-picker,
+    .ql-toolbar.ql-snow button {
+        color: var(--text-secondary) !important;
+    }
+    .ql-toolbar.ql-snow .ql-stroke { stroke: var(--text-secondary) !important; }
+    .ql-toolbar.ql-snow .ql-fill { fill: var(--text-secondary) !important; }
+    .ql-toolbar.ql-snow .ql-picker-options {
+        background: #131318 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+    }
+    .ql-container.ql-snow {
+        border: 1px solid var(--border) !important;
+        border-top: none !important;
+        border-radius: 0 0 10px 10px !important;
+        background: var(--card-bg);
+        font-family: 'Inter', sans-serif !important;
+        font-size: 15px !important;
+        backdrop-filter: blur(12px);
+    }
+    .ql-editor {
+        color: var(--text) !important;
+        min-height: 320px;
+        padding: 20px 24px !important;
+        line-height: 1.8 !important;
+    }
+    .ql-editor.ql-blank::before {
+        color: var(--text-tertiary) !important;
+        font-style: normal !important;
+    }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3 { color: rgba(255,255,255,0.85) !important; }
+    .ql-editor blockquote { border-left: 3px solid var(--border) !important; }
+
+    /* 章节编辑弹窗 */
+    .chapter-edit-modal .modal-box { max-width: 720px; text-align: left; }
+    .chapter-edit-modal .modal-box h3 { text-align: center; margin-bottom: 20px; }
+    .chapter-edit-modal .modal-box input {
+        width: 100%;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        margin-bottom: 14px;
+        transition: border-color 0.15s, background 0.15s;
+        backdrop-filter: blur(12px);
+    }
+    .chapter-edit-modal .modal-box input:focus {
+        border-color: rgba(255,255,255,0.2);
+        background: var(--card-hover);
+    }
+    .chapter-edit-modal .modal-box .modal-actions { margin-top: 20px; }
+
+    /* 阅读页：单栏整合 */
+    #read-page {
+        display: none;
+        animation: fadeSlide 0.3s ease;
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+    .read-toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 24px;
+        flex-wrap: wrap;
+    }
+    .read-toolbar .left,
+    .read-toolbar .right {
+        display: flex; gap: 8px;
+        flex-wrap: wrap;
+    }
+    .read-toolbar button {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 14px;
+        color: var(--text-secondary);
+        font-size: 12px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .read-toolbar button:hover {
+        background: var(--card-hover);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .read-toolbar button.liked { color: var(--primary); border-color: rgba(136,136,136,0.5); }
+    .read-toolbar button.faved { color: #ffd700; border-color: rgba(255,215,0,0.4); }
+    .read-toolbar button.danger { color: #ff6b6b; border-color: rgba(231,76,60,0.3); }
+
+    .read-header-block {
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border);
+    }
+    .read-header-block .book-title {
+        font-size: 30px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.9);
+        letter-spacing: -0.5px;
+        line-height: 1.3;
+        margin-bottom: 8px;
+    }
+    .read-header-block .book-meta {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.5px;
+    }
+
+    /* 章节目录（折叠在正文上方） */
+    .read-toc {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 16px 20px;
+        margin-bottom: 28px;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        display: none;
+    }
+    .read-toc.open { display: block; }
+    .read-toc .toc-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-tertiary);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+    .read-toc .ch-link {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: transparent;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 14px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s;
+        margin-bottom: 3px;
+    }
+    .read-toc .ch-link:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .read-toc .ch-link.active {
+        background: rgba(136,136,136,0.15);
+        color: var(--primary);
+        border-left: 2px solid var(--primary);
+    }
+
+    /* 正文 */
+    .read-body {
+        font-size: 16px;
+        line-height: 1.9;
+        color: var(--text-secondary);
+    }
+    .read-body h1, .read-body h2, .read-body h3 {
+        color: rgba(255,255,255,0.9);
+        font-weight: 600;
+        margin: 32px 0 16px;
+        letter-spacing: -0.3px;
+    }
+    .read-body h1 { font-size: 28px; }
+    .read-body h2 { font-size: 24px; }
+    .read-body h3 { font-size: 20px; }
+    .read-body p { margin-bottom: 18px; }
+    .read-body ul, .read-body ol {
+        margin: 18px 0;
+        padding-left: 24px;
+    }
+    .read-body li { margin-bottom: 8px; }
+    .read-body blockquote {
+        border-left: 3px solid var(--border);
+        padding-left: 18px;
+        margin: 24px 0;
+        color: var(--text-tertiary);
+        font-style: italic;
+    }
+    .read-body pre {
+        background: rgba(0,0,0,0.35);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 18px;
+        overflow-x: auto;
+        margin: 20px 0;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.6;
+    }
+    .read-body a { color: var(--primary); text-decoration: none; }
+    .read-body a:hover { text-decoration: underline; }
+    .read-body img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin: 20px 0;
+        display: block;
+    }
+
+    /* 上下页导航 */
+    .read-nav-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding-top: 32px;
+        margin-top: 40px;
+        border-top: 1px solid var(--border);
+        flex-wrap: wrap;
+    }
+    .read-nav-bottom .nav-btn {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 24px;
+        color: var(--text-secondary);
+        font-size: 14px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        backdrop-filter: blur(12px);
+    }
+    .read-nav-bottom .nav-btn:hover {
+        background: var(--card-hover);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .read-nav-bottom .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    .read-nav-bottom .page-indicator {
+        font-size: 13px;
+        color: var(--text-tertiary);
+        letter-spacing: 1px;
+    }
+
+    /* 评论（在正文下方） */
+    .read-comments {
+        margin-top: 48px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border);
+    }
+    .read-comments .comments-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-tertiary);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+    }
+    .read-comments .comment-item {
+        padding: 14px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .read-comments .comment-item:last-child { border-bottom: none; }
+    .read-comments .cmt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    .read-comments .cmt-user {
+        font-weight: 500; font-size: 14px; color: #fff;
+    }
+    .read-comments .cmt-user .admin-tag {
+        font-size: 10px;
+        background: var(--primary);
+        color: #fff;
+        padding: 1px 8px;
+        border-radius: 8px;
+        margin-left: 6px;
+        font-weight: 500;
+    }
+    .read-comments .cmt-time { font-size: 11px; color: var(--text-tertiary); margin-left: 8px; }
+    .read-comments .cmt-content {
+        font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+    }
+    .read-comments .cmt-deleted {
+        font-size: 14px; color: var(--text-tertiary); font-style: italic;
+    }
+    .read-comments .cmt-actions button {
+        background: transparent; border: none;
+        color: var(--text-tertiary); font-size: 13px;
+        cursor: pointer; padding: 2px 6px;
+    }
+    .read-comments .cmt-actions button:hover { color: #ff6b6b; }
+    .read-comments .comment-input-row {
+        display: flex; gap: 10px; margin-top: 16px;
+    }
+    .read-comments .comment-input-row input {
+        flex: 1;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        backdrop-filter: blur(12px);
+    }
+    .read-comments .comment-input-row input:focus { border-color: rgba(255,255,255,0.2); }
+    .read-comments .comment-input-row button {
+        background: var(--primary);
+        border: none; border-radius: 10px;
+        padding: 12px 22px;
+        color: #fff; font-size: 14px;
+        font-weight: 500; cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .read-comments .comment-input-row button:hover { background: #999; }
+    .read-comments .comment-input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 通用弹窗 */
+    .modal-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.8);
+        justify-content: center; align-items: center;
+        z-index: 20000;
+        padding: 20px;
+        animation: overlayIn 0.15s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-overlay.closing { animation: overlayOut 0.15s ease forwards; }
+    @keyframes overlayIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+    @keyframes overlayOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+    .modal-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%; max-width: 420px;
+        text-align: center;
+        max-height: 85vh; overflow-y: auto;
+    }
+    .modal-box h3 { color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+    .modal-box .modal-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+    .modal-box .modal-input {
+        width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        margin-bottom: 12px;
+    }
+    .modal-box .modal-input:focus { border-color: rgba(255,255,255,0.2); }
+    .modal-box .modal-actions {
+        display: flex; gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .modal-box .modal-actions button {
+        padding: 10px 22px;
+        border-radius: 10px; border: none;
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .modal-box .modal-actions .confirm-btn { background: var(--primary); color: #fff; }
+    .modal-box .modal-actions .confirm-btn:hover { background: #999; }
+    .modal-box .modal-actions .cancel-btn {
+        background: rgba(255,255,255,0.06);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    .modal-box .modal-actions .cancel-btn:hover { background: rgba(255,255,255,0.1); }
+
+    /* 登录 / 用户中心 / 管理 */
+    .overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.8);
+        justify-content: center; align-items: center;
+        z-index: 10000;
+        padding: 20px;
+        animation: overlayIn 0.15s ease;
+    }
+    .overlay.active { display: flex; }
+    .overlay.closing { animation: overlayOut 0.15s ease forwards; }
+    .uc-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px 28px;
+        width: 100%; max-width: 400px;
+    }
+    .uc-header {
+        display: flex; flex-direction: column;
+        align-items: center;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 24px;
+    }
+    .uc-header .avatar {
+        width: 72px; height: 72px;
+        border-radius: 50%; object-fit: cover;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        margin-bottom: 14px; display: none;
+    }
+    .uc-header .name {
+        font-size: 20px; font-weight: 600;
+        color: rgba(255,255,255,0.85);
+    }
+    .uc-section { margin-bottom: 20px; }
+    .uc-section-title {
+        font-size: 11px; font-weight: 600;
+        color: var(--text-tertiary);
+        letter-spacing: 2px; text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+    .uc-field { display: flex; gap: 8px; align-items: center; }
+    .uc-field input {
+        flex: 1; padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: 14px; outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+    .uc-field input:focus { border-color: rgba(255,255,255,0.2); }
+    .uc-field button {
+        padding: 10px 18px;
+        background: var(--primary);
+        color: #fff; border: none; border-radius: 8px;
+        cursor: pointer; font-size: 13px;
+        font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+    .uc-field button:hover { background: #999; }
+    .uc-avatar-row { display: flex; align-items: center; gap: 14px; }
+    .uc-avatar-preview {
+        width: 44px; height: 44px;
+        border-radius: 50%; object-fit: cover;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        display: none; flex-shrink: 0;
+    }
+    .uc-avatar-row label {
+        flex: 1; padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text-secondary);
+        font-size: 13px; cursor: pointer;
+        text-align: center;
+    }
+    .uc-avatar-row label:hover { background: var(--card-hover); color: #fff; }
+    .uc-actions {
+        display: flex; flex-direction: column;
+        gap: 8px; padding-top: 20px;
+        border-top: 1px solid var(--border);
+    }
+    .uc-actions button {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        font-size: 14px; cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+    .uc-actions button:hover { background: var(--card-bg); }
+    .uc-actions .admin-btn { color: var(--primary); border-color: rgba(136,136,136,0.4); }
+    .uc-actions .logout { color: #ff6b6b; border-color: rgba(231,76,60,0.3); }
+
+    #auth-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%; max-width: 380px;
+        text-align: center;
+    }
+    #auth-box h3 { color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 24px; }
+    #auth-box .input {
+        width: 100%; margin-bottom: 12px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: var(--card-bg);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+    #auth-box .input:focus { border-color: rgba(255,255,255,0.2); }
+    #auth-box .btn-submit {
+        width: 100%; padding: 12px;
+        background: var(--primary); color: #fff;
+        border: none; border-radius: 10px;
+        font-size: 14px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        margin-top: 8px;
+    }
+    #auth-box .btn-submit:hover { background: #999; }
+    #auth-box .switch { margin-top: 16px; font-size: 13px; color: var(--text-tertiary); cursor: pointer; }
+    #auth-box .switch span { color: var(--primary); }
+    #auth-box .close { margin-top: 14px; color: var(--text-tertiary); font-size: 12px; cursor: pointer; display: block; }
+    .avatar-upload-area {
+        margin: 14px 0;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+    }
+    .avatar-upload-area img {
+        width: 60px; height: 60px;
+        border-radius: 50%; object-fit: cover;
+        background: var(--card-bg);
+        display: none;
+        border: 1px solid var(--border);
+    }
+    .avatar-upload-area label {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        background: var(--card-bg);
+        padding: 6px 16px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+
+    .admin-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%; max-width: 540px;
+        max-height: 80vh; overflow-y: auto;
+    }
+    .admin-box h3 {
+        color: #fff; font-size: 20px; font-weight: 600;
+        margin-bottom: 24px; text-align: center;
+    }
+    .admin-box .user-item {
+        display: flex; justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+        gap: 10px; flex-wrap: wrap;
+    }
+    .admin-box .user-item .uname { font-weight: 500; color: var(--text); font-size: 14px; }
+    .admin-box .user-item .urole {
+        font-size: 11px; color: var(--text-tertiary);
+        padding: 2px 10px; border-radius: 10px;
+        background: var(--card-bg); margin-left: 8px;
+    }
+    .admin-box .user-item .urole.admin { color: var(--primary); background: rgba(136,136,136,0.15); }
+    .admin-box .user-item .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .admin-box .user-item .actions button {
+        padding: 6px 14px;
+        border-radius: 8px; border: none;
+        font-size: 12px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .btn-set-admin { background: var(--primary); color: #fff; }
+    .btn-set-admin:hover { background: #999; }
+    .btn-set-user { background: rgba(255,255,255,0.1); color: var(--text); }
+    .btn-set-user:hover { background: rgba(255,255,255,0.15); }
+    .btn-delete { background: #e74c3c; color: #fff; }
+    .btn-delete:hover { background: #c0392b; }
+    .close-admin {
+        display: block; margin-top: 24px;
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 13px; cursor: pointer;
+    }
+
+    #toast-container {
+        position: fixed; bottom: 80px; left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999; pointer-events: none;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+    }
+    .toast-item {
+        padding: 10px 24px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.9);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; font-size: 13px;
+        animation: toastIn 0.2s ease;
+    }
+    .toast-item.error { border-color: rgba(231,76,60,0.4); }
+    .toast-item.success { border-color: rgba(76,175,80,0.4); }
+    @keyframes toastIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+        .top-bar { top: 14px; right: 14px; gap: 8px; }
+        .top-bar .back-btn { height: 38px; padding: 0 14px; font-size: 12px; }
+        .top-bar .avatar-btn { width: 38px; height: 38px; font-size: 13px; }
+        .top-bar .lang-select { height: 38px; font-size: 12px; padding: 0 28px 0 12px; background-position: right 10px center; }
+        .hero-bg { height: 70vh; }
+        .content { padding: 180px 20px 60px; }
+        .page-title { font-size: clamp(40px, 14vw, 72px); letter-spacing: -2px; }
+        .page-sub { font-size: 12px; letter-spacing: 3px; margin-bottom: 40px; }
+        .page-actions { gap: 8px; margin-bottom: 32px; }
+        .page-actions button { font-size: 13px; padding: 10px 16px; flex: 1 1 calc(50% - 4px); min-width: 0; white-space: nowrap; }
+        .library-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .book-card { padding: 8px 6px; }
+        .book-card .book-title { font-size: 13px; }
+        .book-card .book-author { font-size: 10px; }
+        #editor-page .editor-header { flex-direction: column; align-items: stretch; gap: 16px; }
+        #editor-page .editor-header h2 { font-size: 20px; text-align: center; }
+        #editor-page .editor-header .editor-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+        }
+        #editor-page .editor-header .editor-actions button { padding: 12px 8px; font-size: 13px; }
+        .editor-form .form-row { grid-template-columns: 1fr; gap: 20px; }
+        .chapter-item .ch-title { font-size: 14px; flex: 1 1 100%; }
+        .chapter-item .ch-actions { width: 100%; justify-content: flex-end; }
+        .chapter-item .ch-actions button { padding: 6px 12px; font-size: 13px; min-width: 36px; }
+        #read-page { padding: 0 18px; }
+        .read-header-block .book-title { font-size: 24px; }
+        .read-body { font-size: 15px; line-height: 1.85; }
+        .read-nav-bottom .nav-btn { padding: 12px 18px; font-size: 14px; flex: 1; }
+        .read-nav-bottom .page-indicator { order: -1; width: 100%; text-align: center; margin-bottom: 4px; }
+        .chapter-edit-modal .modal-box { padding: 20px 16px; }
+        .ql-editor { min-height: 240px; padding: 16px 18px !important; }
+    }
+</style>
+</head>
+<body>
+
+<div class="hero-bg"></div>
+<canvas id="particles"></canvas>
+
+<div id="toast-container"></div>
+
+<div class="top-bar" id="top-bar">
+    <button class="back-btn" onclick="goBack()" data-i18n="back_btn">← 返回</button>
+    <select class="lang-select" id="lang-select" onchange="switchLang(this.value)">
+        <option value="zh-CN">简体</option>
+        <option value="zh-TW">繁體</option>
+        <option value="en">English</option>
+    </select>
+    <button class="avatar-btn" id="avatar-btn" onclick="openUserCenter()" title="用户中心">
+        <span id="avatar-text">👤</span>
+        <img id="avatar-img" style="display:none;" alt="avatar">
+    </button>
+</div>
+
+<section class="content">
+
+    <div id="library-page">
+        <div class="page-title" data-i18n="library_title">APE 藏书阁</div>
+        <div class="page-sub" data-i18n="library_sub">— 知识 · 历史 · 记录 —</div>
+        <div class="page-actions">
+            <button class="primary" onclick="openEditor()" data-i18n="btn_new_book">📖 编写新书</button>
+            <button onclick="loadBooks()" data-i18n="btn_refresh">🔄 刷新</button>
+            <button onclick="showMyBooks()" id="my-books-btn" data-i18n="btn_my_books">📚 我的书</button>
+            <button onclick="showDrafts()" id="drafts-btn" style="display:none;" data-i18n="btn_drafts">📝 草稿箱</button>
+        </div>
+        <div class="library-grid" id="library-grid"></div>
+    </div>
+
+    <div id="editor-page">
+        <div class="editor-header">
+            <h2 id="editor-title">📝 编写新书</h2>
+            <div class="editor-actions">
+                <button class="save-draft" onclick="saveBook('draft')" data-i18n="btn_save_draft">💾 存草稿</button>
+                <button class="publish-btn" onclick="saveBook('published')" data-i18n="btn_publish">📤 发布</button>
+                <button class="cancel-btn" onclick="closeEditor()" data-i18n="btn_cancel">✕ 取消</button>
+            </div>
+        </div>
+        <div class="editor-form">
+            <div class="form-row">
+                <div>
+                    <label data-i18n="label_book_title">书名 *</label>
+                    <input id="book-title" placeholder="输入书名..." maxlength="100">
+                </div>
+                <div>
+                    <label data-i18n="label_cover_color">封面颜色</label>
+                    <input id="book-cover-color" type="color" value="#2a2a3a">
+                </div>
+            </div>
+            <div>
+                <label data-i18n="label_book_desc">简介</label>
+                <textarea id="book-desc" placeholder="书籍简介..." rows="2"></textarea>
+            </div>
+            <div>
+                <label data-i18n="label_chapters">章节</label>
+                <div class="chapters-list" id="chapters-list"></div>
+                <button class="add-chapter-btn" onclick="addChapter()" data-i18n="btn_add_chapter">+ 添加章节</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="read-page">
+        <div class="read-toolbar">
+            <div class="left">
+                <button onclick="toggleToc()" id="toc-btn" data-i18n="btn_toc">📑 目录</button>
+            </div>
+            <div class="right" id="read-actions"></div>
+        </div>
+
+        <div class="read-header-block">
+            <div class="book-title" id="read-title"></div>
+            <div class="book-meta" id="read-meta"></div>
+        </div>
+
+        <div class="read-toc" id="read-toc">
+            <div class="toc-title" data-i18n="toc_title">目录</div>
+            <div id="chapter-list"></div>
+        </div>
+
+        <div class="read-body" id="read-body"></div>
+
+        <div class="read-nav-bottom">
+            <button class="nav-btn" id="prev-chapter" onclick="prevChapter()" data-i18n="btn_prev">← 上一页</button>
+            <span class="page-indicator" id="page-indicator">1 / 1</span>
+            <button class="nav-btn" id="next-chapter" onclick="nextChapter()" data-i18n="btn_next">下一页 →</button>
+        </div>
+
+        <div class="read-comments">
+            <div class="comments-title" data-i18n="comments_title">💬 评论</div>
+            <div id="comments-list"></div>
+            <div class="comment-input-row">
+                <input id="comment-input" placeholder="写评论..." maxlength="500" data-i18n-ph="comment_placeholder">
+                <button id="comment-btn" onclick="submitComment()" data-i18n="comment_send">发送</button>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<div class="modal-overlay" id="auth-overlay" onclick="if(event.target===this) closeAuth()">
+    <div id="auth-box">
+        <h3 id="auth-title">登录 APE</h3>
+        <input id="auth-username" class="input" placeholder="用户名">
+        <input id="auth-password" class="input" type="password" placeholder="密码">
+        <div class="avatar-upload-area">
+            <img id="auth-avatar-preview">
+            <label for="auth-avatar-input">选择头像</label>
+            <input type="file" id="auth-avatar-input" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
+        </div>
+        <button id="auth-btn" class="btn-submit" onclick="handleAuth()">登录</button>
+        <div class="switch" onclick="toggleAuthMode()" id="auth-switch">没有账号？ <span>去注册</span></div>
+        <div class="close" onclick="closeAuth()">关闭</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="uc-overlay" onclick="if(event.target===this) closeUserCenter()">
+    <div class="uc-box">
+        <div class="uc-header">
+            <img id="uc-avatar" class="avatar" src="" alt="avatar">
+            <div class="name" id="uc-name"></div>
+        </div>
+        <div class="uc-section">
+            <div class="uc-section-title" data-i18n="uc_edit_name">修改用户名</div>
+            <div class="uc-field">
+                <input id="uc-edit-name" placeholder="新用户名">
+                <button onclick="saveUCProfile()" data-i18n="save">保存</button>
+            </div>
+        </div>
+        <div class="uc-section">
+            <div class="uc-section-title" data-i18n="uc_change_avatar">更换头像</div>
+            <div class="uc-avatar-row">
+                <img id="uc-avatar-preview" class="uc-avatar-preview">
+                <label for="uc-edit-avatar" data-i18n="uc_pick_image">选择图片</label>
+                <input type="file" id="uc-edit-avatar" accept="image/*" style="display:none;" onchange="handleUCAvatar(event)">
+            </div>
+        </div>
+        <div class="uc-actions">
+            <button class="admin-btn" id="uc-admin-btn" onclick="openAdminPanel()" style="display:none;" data-i18n="admin">管理面板</button>
+            <button class="logout" onclick="logoutUser()" data-i18n="logout">登出</button>
+            <button onclick="closeUserCenter()" data-i18n="back">返回</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="admin-overlay" onclick="if(event.target===this) closeAdminPanel()">
+    <div class="admin-box">
+        <h3 data-i18n="admin_title">用户管理</h3>
+        <div id="admin-user-list"></div>
+        <div class="close-admin" onclick="closeAdminPanel()" data-i18n="close">关闭</div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="confirm-overlay" onclick="if(event.target===this) closeConfirm()">
+    <div class="modal-box">
+        <h3 id="confirm-title">确认</h3>
+        <div class="modal-desc" id="confirm-desc"></div>
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeConfirm()" data-i18n="cancel">取消</button>
+            <button class="confirm-btn" id="confirm-btn" onclick="confirmAction()" data-i18n="confirm_btn">确认</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="chapter-edit-modal" onclick="if(event.target===this) closeChapterEdit()">
+    <div class="modal-box">
+        <h3 id="chapter-edit-title" data-i18n="edit_chapter_title">编辑章节</h3>
+        <input id="chapter-edit-name" placeholder="章节标题">
+        <div id="chapter-quill"></div>
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeChapterEdit()" data-i18n="cancel">取消</button>
+            <button class="confirm-btn" onclick="saveChapterEdit()" data-i18n="save">保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="img-url-modal" onclick="if(event.target===this) closeImgUrlModal()">
+    <div class="modal-box">
+        <h3 data-i18n="img_url_title">插入图片</h3>
+        <div class="modal-desc" data-i18n="img_url_desc">粘贴图床链接，自动插入到正文</div>
+        <input id="img-url-input" class="modal-input" placeholder="https://...">
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeImgUrlModal()" data-i18n="cancel">取消</button>
+            <button class="confirm-btn" onclick="insertImgFromUrl()" data-i18n="confirm_btn">插入</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let SB = null;
+
+async function initSB() {
+    const res = await fetch('key.json');
+    const cfg = await res.json();
+    SB = supabase.createClient(cfg.supabase_url, cfg.supabase_key);
+}
+
+const state = {
+    user: localStorage.getItem('ape_user') || null,
+    avatar: localStorage.getItem('ape_avatar') || null,
+    role: localStorage.getItem('ape_role') || 'user',
+    isLogin: false,
+    lang: localStorage.getItem('ape_lang') || 'zh-CN',
+    editingBookId: null,
+    readingBookId: null,
+    readingChapters: [],
+    currentChapterIndex: 0,
+    showMyBooks: false,
+    showDrafts: false,
+    chapters: [],
+    chapterEditIndex: -1,
+    confirmCallback: null,
+    currentLikeState: false,
+    currentLikeCount: 0,
+    bookQuill: null,
+    chapterQuill: null,
+    imgUrlTarget: 'chapter' // 'chapter'
+};
+
+const ADMIN_USER = 'Aplefox';
+
+const LANG_DATA = {
+    'zh-CN': {
+        library_title: 'APE 藏书阁',
+        library_sub: '— 知识 · 历史 · 记录 —',
+        library_empty: '📚 藏书阁空空如也，去写一本吧',
+        drafts_empty: '📝 草稿箱空空如也',
+        auth_login: '登录 APE', auth_register: '注册 APE',
+        auth_avatar: '选择头像', auth_login_btn: '登录', auth_register_btn: '注册',
+        auth_switch: '没有账号？ <span>去注册</span>', auth_switch_login: '已有账号？ <span>去登录</span>',
+        close: '关闭', save: '保存', back: '返回', admin: '管理面板', logout: '登出',
+        delete_confirm: '确认删除？', loading: '加载中...', no_data: '暂无用户',
+        draft: '草稿', published: '已发布', pinned: '📌 置顶',
+        edit: '编辑', delete: '删除', unpublish: '降为草稿', publish: '发布', read: '阅读',
+        my_books: '我的书', all_books: '全部书籍', drafts: '草稿箱',
+        copy_success: '已复制到剪贴板', like: '❤️ 点赞', liked: '❤️ 已赞',
+        fav: '⭐ 收藏', faved: '⭐ 已收藏',
+        comment_placeholder: '写评论...', comment_send: '发送', comment_success: '评论已发送',
+        login_to_comment: '请先登录再评论', login_to_like: '请先登录再点赞', login_to_fav: '请先登录再收藏',
+        delete_comment_confirm: '确认删除此评论？', comment_deleted: '评论已删除', no_comments: '还没有评论',
+        admin_tag: '管理',
+        back_btn: '← 返回',
+        btn_toc: '📑 目录', toc_title: '目录',
+        comments_title: '💬 评论',
+        btn_new_book: '📖 编写新书', btn_refresh: '🔄 刷新',
+        btn_my_books: '📚 我的书', btn_drafts: '📝 草稿箱',
+        btn_save_draft: '💾 存草稿', btn_publish: '📤 发布', btn_cancel: '✕ 取消',
+        btn_add_chapter: '+ 添加章节',
+        btn_prev: '← 上一页', btn_next: '下一页 →',
+        label_book_title: '书名 *', label_cover_color: '封面颜色',
+        label_book_desc: '简介', label_chapters: '章节',
+        uc_edit_name: '修改用户名', uc_change_avatar: '更换头像', uc_pick_image: '选择图片',
+        admin_title: '用户管理', confirm_btn: '确认', cancel: '取消',
+        edit_chapter_title: '编辑章节',
+        img_url_title: '插入图片', img_url_desc: '粘贴图床链接，自动插入到正文',
+        confirm_publish_title: '确认发布', confirm_publish_desc: '确定要将此书发布到藏书阁吗？',
+        confirm_unpublish_title: '确认降为草稿', confirm_unpublish_desc: '确定要将此书降为草稿吗？',
+        confirm_delete_title: '确认删除', confirm_delete_desc: '确定删除这本书吗？',
+        edit_mode_hint: '编辑模式：正文支持富文本和图片'
+    },
+    'zh-TW': {
+        library_title: 'APE 藏書閣', library_sub: '— 知識 · 歷史 · 記錄 —',
+        library_empty: '📚 藏書閣空空如也，去寫一本吧', drafts_empty: '📝 草稿箱空空如也',
+        auth_login: '登入 APE', auth_register: '註冊 APE',
+        auth_avatar: '選擇頭像', auth_login_btn: '登入', auth_register_btn: '註冊',
+        auth_switch: '沒有帳號？ <span>去註冊</span>', auth_switch_login: '已有帳號？ <span>去登入</span>',
+        close: '關閉', save: '儲存', back: '返回', admin: '管理面板', logout: '登出',
+        delete_confirm: '確認刪除？', loading: '載入中...', no_data: '暫無用戶',
+        draft: '草稿', published: '已發布', pinned: '📌 置頂',
+        edit: '編輯', delete: '刪除', unpublish: '降為草稿', publish: '發布', read: '閱讀',
+        my_books: '我的書', all_books: '全部書籍', drafts: '草稿箱',
+        copy_success: '已複製到剪貼板', like: '❤️ 點讚', liked: '❤️ 已讚',
+        fav: '⭐ 收藏', faved: '⭐ 已收藏',
+        comment_placeholder: '寫評論...', comment_send: '發送', comment_success: '評論已發送',
+        login_to_comment: '請先登入再評論', login_to_like: '請先登入再點讚', login_to_fav: '請先登入再收藏',
+        delete_comment_confirm: '確認刪除此評論？', comment_deleted: '評論已刪除', no_comments: '還沒有評論',
+        admin_tag: '管理',
+        back_btn: '← 返回',
+        btn_toc: '📑 目錄', toc_title: '目錄',
+        comments_title: '💬 評論',
+        btn_new_book: '📖 編寫新書', btn_refresh: '🔄 重新載入',
+        btn_my_books: '📚 我的書', btn_drafts: '📝 草稿箱',
+        btn_save_draft: '💾 存草稿', btn_publish: '📤 發布', btn_cancel: '✕ 取消',
+        btn_add_chapter: '+ 新增章節',
+        btn_prev: '← 上一頁', btn_next: '下一頁 →',
+        label_book_title: '書名 *', label_cover_color: '封面顏色',
+        label_book_desc: '簡介', label_chapters: '章節',
+        uc_edit_name: '修改使用者名稱', uc_change_avatar: '更換頭像', uc_pick_image: '選擇圖片',
+        admin_title: '使用者管理', confirm_btn: '確認', cancel: '取消',
+        edit_chapter_title: '編輯章節',
+        img_url_title: '插入圖片', img_url_desc: '貼上圖床連結，自動插入到正文',
+        confirm_publish_title: '確認發布', confirm_publish_desc: '確定要將此書發布到藏書閣嗎？',
+        confirm_unpublish_title: '確認降為草稿', confirm_unpublish_desc: '確定要將此書降為草稿嗎？',
+        confirm_delete_title: '確認刪除', confirm_delete_desc: '確定刪除這本書嗎？',
+        edit_mode_hint: '編輯模式：正文支援富文字和圖片'
+    },
+    'en': {
+        library_title: 'APE Library', library_sub: '— Knowledge · History · Records —',
+        library_empty: '📚 Library is empty, go write one', drafts_empty: '📝 Drafts is empty',
+        auth_login: 'Login to APE', auth_register: 'Register for APE',
+        auth_avatar: 'Choose Avatar', auth_login_btn: 'Login', auth_register_btn: 'Register',
+        auth_switch: 'No account? <span>Register</span>', auth_switch_login: 'Have an account? <span>Login</span>',
+        close: 'Close', save: 'Save', back: 'Back', admin: 'Admin Panel', logout: 'Logout',
+        delete_confirm: 'Confirm delete?', loading: 'Loading...', no_data: 'No users',
+        draft: 'Draft', published: 'Published', pinned: '📌 Pinned',
+        edit: 'Edit', delete: 'Delete', unpublish: 'Unpublish', publish: 'Publish', read: 'Read',
+        my_books: 'My Books', all_books: 'All Books', drafts: 'Drafts',
+        copy_success: 'Copied to clipboard', like: '❤️ Like', liked: '❤️ Liked',
+        fav: '⭐ Favorite', faved: '⭐ Favorited',
+        comment_placeholder: 'Write a comment...', comment_send: 'Send', comment_success: 'Comment sent',
+        login_to_comment: 'Please login to comment', login_to_like: 'Please login to like', login_to_fav: 'Please login to favorite',
+        delete_comment_confirm: 'Confirm delete this comment?', comment_deleted: 'Comment deleted', no_comments: 'No comments yet',
+        admin_tag: 'Admin',
+        back_btn: '← Back',
+        btn_toc: '📑 Contents', toc_title: 'Contents',
+        comments_title: '💬 Comments',
+        btn_new_book: '📖 Write New', btn_refresh: '🔄 Refresh',
+        btn_my_books: '📚 My Books', btn_drafts: '📝 Drafts',
+        btn_save_draft: '💾 Save Draft', btn_publish: '📤 Publish', btn_cancel: '✕ Cancel',
+        btn_add_chapter: '+ Add Chapter',
+        btn_prev: '← Prev', btn_next: 'Next →',
+        label_book_title: 'Title *', label_cover_color: 'Cover Color',
+        label_book_desc: 'Description', label_chapters: 'Chapters',
+        uc_edit_name: 'Change Username', uc_change_avatar: 'Change Avatar', uc_pick_image: 'Choose Image',
+        admin_title: 'User Management', confirm_btn: 'Confirm', cancel: 'Cancel',
+        edit_chapter_title: 'Edit Chapter',
+        img_url_title: 'Insert Image', img_url_desc: 'Paste image URL, will be inserted into content',
+        confirm_publish_title: 'Confirm Publish', confirm_publish_desc: 'Publish this book to the library?',
+        confirm_unpublish_title: 'Confirm Unpublish', confirm_unpublish_desc: 'Move this book back to drafts?',
+        confirm_delete_title: 'Confirm Delete', confirm_delete_desc: 'Delete this book permanently?',
+        edit_mode_hint: 'Edit mode: content supports rich text and images'
+    }
+};
+
+function t(key) {
+    return LANG_DATA[state.lang]?.[key] || LANG_DATA['zh-CN'][key] || key;
+}
+
+function applyLang() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (!key) return;
+        const val = t(key);
+        if (val.includes('<span>')) el.innerHTML = val;
+        else el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        if (key) el.placeholder = t(key);
+    });
+    const title = document.getElementById('auth-title');
+    if (title) title.textContent = state.isLogin ? t('auth_login') : t('auth_register');
+    const btn = document.getElementById('auth-btn');
+    if (btn) btn.textContent = state.isLogin ? t('auth_login_btn') : t('auth_register_btn');
+    const sel = document.getElementById('lang-select');
+    if (sel) sel.value = state.lang;
+    const myBtn = document.getElementById('my-books-btn');
+    if (myBtn) myBtn.textContent = state.showMyBooks ? t('all_books') : t('my_books');
+    const draftBtn = document.getElementById('drafts-btn');
+    if (draftBtn) {
+        draftBtn.textContent = state.showDrafts ? t('all_books') : t('drafts');
+        draftBtn.style.display = state.user ? 'inline-block' : 'none';
+    }
+    const commentInput = document.getElementById('comment-input');
+    if (commentInput) commentInput.placeholder = t('comment_placeholder');
+    const commentBtn = document.getElementById('comment-btn');
+    if (commentBtn) commentBtn.textContent = t('comment_send');
+    const ucName = document.getElementById('uc-name');
+    if (ucName) ucName.textContent = state.user || '未登录';
+    updateAvatarUI();
+}
+
+function switchLang(val) {
+    state.lang = val;
+    localStorage.setItem('ape_lang', val);
+    applyLang();
+    if (document.getElementById('admin-overlay').classList.contains('active')) loadUserList();
+    loadBooks();
+    if (state.readingBookId) loadComments(state.readingBookId);
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast-item ' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.animation = 'toastOut 0.2s ease forwards';
+        setTimeout(() => el.remove(), 200);
+    }, 2000);
+}
+
+/* ===== 内容渲染：兼容 HTML 和纯文本 ===== */
+function renderContent(content) {
+    if (!content) return '';
+    // 判断是否含 HTML 标签
+    if (/<(p|h[1-6]|ul|ol|li|blockquote|pre|strong|em|a|img|br|div|span)[\s>]/i.test(content)) {
+        return content;
+    }
+    // 纯文本，按换行转成 <p>
+    return content.split('\n').map(line => `<p>${escapeHtml(line) || '<br>'}</p>`).join('');
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function goBack() {
+    if (document.getElementById('read-page').style.display !== 'none') { closeRead(); return; }
+    if (document.getElementById('editor-page').style.display !== 'none') {
+        if (state.chapters.length > 0 || document.getElementById('book-title').value.trim()) {
+            if (!confirm('有未保存的内容，确定退出吗？')) return;
+        }
+        closeEditor(); return;
+    }
+    window.location.href = 'index.html';
+}
+
+function updateAvatarUI() {
+    const textEl = document.getElementById('avatar-text');
+    const imgEl = document.getElementById('avatar-img');
+    if (state.user && state.avatar) {
+        imgEl.src = state.avatar; imgEl.style.display = 'block'; textEl.style.display = 'none';
+    } else if (state.user) {
+        textEl.style.display = 'block';
+        textEl.textContent = state.user.charAt(0).toUpperCase();
+        imgEl.style.display = 'none';
+    } else {
+        textEl.style.display = 'block';
+        textEl.textContent = '👤';
+        imgEl.style.display = 'none';
+    }
+}
+
+let tempAvatarFile = null;
+function previewAvatar(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    tempAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = document.getElementById('auth-avatar-preview');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function openAuth() {
+    document.getElementById('auth-overlay').classList.add('active');
+    document.getElementById('auth-overlay').classList.remove('closing');
+    document.getElementById('auth-username').value = '';
+    document.getElementById('auth-password').value = '';
+    document.getElementById('auth-avatar-preview').style.display = 'none';
+    document.getElementById('auth-avatar-input').value = '';
+    tempAvatarFile = null;
+    applyLang();
+}
+function closeAuth() {
+    const overlay = document.getElementById('auth-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+function toggleAuthMode() {
+    state.isLogin = !state.isLogin;
+    applyLang();
+}
+
+async function handleAuth() {
+    const btn = document.getElementById('auth-btn');
+    const orig = btn.textContent;
+    btn.innerHTML = '<span class="loading-spinner"></span>处理中...';
+    btn.classList.add('loading');
+    const u = document.getElementById('auth-username').value.trim();
+    const p = document.getElementById('auth-password').value.trim();
+    if (!u || !p) {
+        showToast('用户名和密码不能为空', 'error');
+        btn.textContent = orig; btn.classList.remove('loading');
+        return;
+    }
+    try {
+        const { data: existing } = await SB.from('users').select('*').eq('username', u);
+        if (state.isLogin) {
+            if (!existing || existing.length === 0 || existing[0].password !== p) {
+                showToast('用户名或密码错误', 'error');
+                btn.textContent = orig; btn.classList.remove('loading');
+                return;
+            }
+            state.user = u;
+            state.avatar = existing[0].avatar_url || null;
+            state.role = existing[0].role || 'user';
+            localStorage.setItem('ape_user', u);
+            if (state.avatar) localStorage.setItem('ape_avatar', state.avatar);
+            localStorage.setItem('ape_role', state.role);
+            closeAuth(); updateUI(); updateAvatarUI();
+            showToast('欢迎回来，' + u, 'success');
+            loadBooks();
+        } else {
+            if (existing && existing.length > 0) {
+                showToast('用户名已被注册', 'error');
+                btn.textContent = orig; btn.classList.remove('loading');
+                return;
+            }
+            let avatarUrl = null;
+            if (tempAvatarFile) {
+                const fileName = Date.now() + '_' + tempAvatarFile.name;
+                const { error: uploadErr } = await SB.storage.from('avatars').upload(fileName, tempAvatarFile);
+                if (!uploadErr) {
+                    const { data: urlData } = SB.storage.from('avatars').getPublicUrl(fileName);
+                    avatarUrl = urlData.publicUrl;
+                }
+            }
+            const { error: insertErr } = await SB.from('users').insert({
+                username: u, password: p, avatar_url: avatarUrl, level: 1, role: 'user'
+            });
+            if (insertErr) {
+                showToast('注册失败: ' + insertErr.message, 'error');
+                btn.textContent = orig; btn.classList.remove('loading');
+                return;
+            }
+            state.user = u;
+            state.avatar = avatarUrl;
+            state.role = 'user';
+            localStorage.setItem('ape_user', u);
+            if (avatarUrl) localStorage.setItem('ape_avatar', avatarUrl);
+            localStorage.setItem('ape_role', 'user');
+            closeAuth(); updateUI(); updateAvatarUI();
+            showToast('欢迎加入，' + u + '！', 'success');
+            loadBooks();
+        }
+    } catch (e) {
+        showToast('操作失败，请重试', 'error');
+    } finally {
+        btn.textContent = orig;
+        btn.classList.remove('loading');
+    }
+}
+
+function updateUI() {
+    const adminBtn = document.getElementById('uc-admin-btn');
+    const isAdmin = state.user === ADMIN_USER || state.role === 'admin';
+    if (state.user && isAdmin) adminBtn.style.display = 'block';
+    else adminBtn.style.display = 'none';
+    const draftBtn = document.getElementById('drafts-btn');
+    if (draftBtn) draftBtn.style.display = state.user ? 'inline-block' : 'none';
+    updateAvatarUI();
+    if (document.getElementById('uc-overlay').classList.contains('active')) loadUserBooksAndStats();
+}
+
+function openUserCenter() {
+    if (!state.user) { openAuth(); return; }
+    const img = document.getElementById('uc-avatar');
+    if (state.avatar && state.avatar.trim()) { img.src = state.avatar; img.style.display = 'block'; }
+    else img.style.display = 'none';
+    document.getElementById('uc-name').textContent = state.user;
+    document.getElementById('uc-edit-name').value = '';
+    document.getElementById('uc-avatar-preview').style.display = 'none';
+    tempUcAvatarFile = null;
+    document.getElementById('uc-overlay').classList.add('active');
+    document.getElementById('uc-overlay').classList.remove('closing');
+    loadUserBooksAndStats();
+}
+function closeUserCenter() {
+    const overlay = document.getElementById('uc-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+async function loadUserBooksAndStats() {
+    if (!state.user) return;
+    try {
+        const { data: books, error: booksErr } = await SB.from('books')
+            .select('id, title, status').eq('author', state.user).eq('status', 'published')
+            .order('created_at', { ascending: false });
+        if (booksErr) throw booksErr;
+        const bookIds = books.map(b => b.id);
+        let totalLikes = 0;
+        if (bookIds.length > 0) {
+            const { data: likes, error: likesErr } = await SB.from('book_likes')
+                .select('book_id').in('book_id', bookIds);
+            if (!likesErr && likes) totalLikes = likes.length;
+        }
+        const postEl = document.getElementById('uc-post-count');
+        const likeEl = document.getElementById('uc-like-count');
+        if (postEl) postEl.textContent = books.length;
+        if (likeEl) likeEl.textContent = totalLikes;
+    } catch (err) { console.error('加载用户数据失败:', err); }
+}
+
+let tempUcAvatarFile = null;
+function handleUCAvatar(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    tempUcAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = document.getElementById('uc-avatar');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+        document.getElementById('uc-avatar-preview').src = ev.target.result;
+        document.getElementById('uc-avatar-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function saveUCProfile() {
+    if (!state.user) return;
+    const newName = document.getElementById('uc-edit-name').value.trim();
+    let newAvatarUrl = state.avatar;
+    if (tempUcAvatarFile) {
+        const fileName = Date.now() + '_' + tempUcAvatarFile.name;
+        const { error: uploadErr } = await SB.storage.from('avatars').upload(fileName, tempUcAvatarFile);
+        if (!uploadErr) {
+            const { data: urlData } = SB.storage.from('avatars').getPublicUrl(fileName);
+            newAvatarUrl = urlData.publicUrl;
+        } else showToast('头像上传失败', 'error');
+    }
+    if (newName && newName !== state.user) {
+        const { data: check } = await SB.from('users').select('username').eq('username', newName);
+        if (check && check.length > 0) { showToast('用户名已被注册', 'error'); return; }
+        const { error: updateErr } = await SB.from('users').update({ username: newName }).eq('username', state.user);
+        if (updateErr) { showToast('修改失败', 'error'); return; }
+        state.user = newName;
+        localStorage.setItem('ape_user', newName);
+    }
+    if (newAvatarUrl && newAvatarUrl !== state.avatar) {
+        const { error: updateErr } = await SB.from('users').update({ avatar_url: newAvatarUrl }).eq('username', state.user);
+        if (!updateErr) {
+            state.avatar = newAvatarUrl;
+            localStorage.setItem('ape_avatar', newAvatarUrl);
+        }
+    }
+    closeUserCenter(); updateUI(); updateAvatarUI();
+    showToast('个人信息已更新', 'success');
+}
+
+function logoutUser() {
+    if (!confirm('确认退出登录？')) return;
+    state.user = null; state.avatar = null; state.role = 'user';
+    localStorage.removeItem('ape_user');
+    localStorage.removeItem('ape_avatar');
+    localStorage.removeItem('ape_role');
+    closeUserCenter(); updateUI(); updateAvatarUI();
+    showToast('已退出登录', 'info');
+    loadBooks();
+}
+
+async function openAdminPanel() {
+    const isAdmin = state.user === ADMIN_USER || state.role === 'admin';
+    if (!isAdmin) { showToast('无权限', 'error'); return; }
+    document.getElementById('admin-overlay').classList.add('active');
+    document.getElementById('admin-overlay').classList.remove('closing');
+    await loadUserList();
+}
+function closeAdminPanel() {
+    const overlay = document.getElementById('admin-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+async function loadUserList() {
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">' + t('loading') + '</div>';
+    const { data: users, error } = await SB.from('users').select('username, role').order('username');
+    if (error || !users || users.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">' + t('no_data') + '</div>';
+        return;
+    }
+    list.innerHTML = users.map(u => {
+        const isAdmin = u.role === 'admin' || u.username === ADMIN_USER;
+        const isSelf = u.username === state.user;
+        const isFounder = u.username === ADMIN_USER;
+        let actions = '';
+        const canManage = state.user === ADMIN_USER || state.role === 'admin';
+        if (canManage && !isFounder && u.username !== state.user) {
+            if (u.role === 'admin') {
+                actions += '<button class="btn-set-user" onclick="setUserRole(\'' + u.username + '\',\'user\')">撤销</button>';
+            } else {
+                actions += '<button class="btn-set-admin" onclick="setUserRole(\'' + u.username + '\',\'admin\')">设管理</button>';
+            }
+            actions += '<button class="btn-delete" onclick="deleteUser(\'' + u.username + '\')">删除</button>';
+        }
+        const roleLabel = isFounder ? '创始人' : (isAdmin ? '管理员' : '用户');
+        return '<div class="user-item"><div><span class="uname">' + u.username +
+            '</span><span class="urole ' + (isAdmin ? 'admin' : '') + '">' + roleLabel +
+            '</span>' + (isSelf ? ' <span style="color:var(--text-tertiary);font-size:12px;">(我)</span>' : '') +
+            '</div><div class="actions">' + actions + '</div></div>';
+    }).join('');
+}
+
+async function setUserRole(username, role) {
+    if (!confirm('确认将 ' + username + ' 设为 ' + (role === 'admin' ? '管理员' : '普通用户') + ' 吗？')) return;
+    const { data, error } = await SB.rpc('admin_set_role', {
+        operator: state.user, target: username, new_role: role
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '操作失败', 'error');
+        return;
+    }
+    showToast('已更新 ' + username + ' 的角色', 'success');
+    await loadUserList();
+}
+
+async function deleteUser(username) {
+    if (!confirm(t('delete_confirm'))) return;
+    const { data, error } = await SB.rpc('admin_delete_user', {
+        operator: state.user, target: username
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '删除失败', 'error');
+        return;
+    }
+    showToast('已删除用户 ' + username, 'success');
+    await loadUserList();
+}
+
+function openConfirm(title, desc, callback) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-desc').textContent = desc;
+    state.confirmCallback = callback;
+    document.getElementById('confirm-overlay').classList.add('active');
+    document.getElementById('confirm-overlay').classList.remove('closing');
+}
+function closeConfirm() {
+    const overlay = document.getElementById('confirm-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+    state.confirmCallback = null;
+}
+function confirmAction() {
+    if (state.confirmCallback) state.confirmCallback();
+    closeConfirm();
+}
+
+/* ===== 书架 ===== */
+function showLibrary() {
+    document.getElementById('library-page').style.display = 'block';
+    document.getElementById('editor-page').style.display = 'none';
+    document.getElementById('read-page').style.display = 'none';
+    document.getElementById('top-bar').classList.remove('hidden');
+    loadBooks();
+}
+function showEditor(editBookId) {
+    document.getElementById('library-page').style.display = 'none';
+    document.getElementById('editor-page').style.display = 'block';
+    document.getElementById('read-page').style.display = 'none';
+    document.getElementById('top-bar').classList.remove('hidden');
+    if (editBookId) {
+        document.getElementById('editor-title').textContent = '✏️ 编辑书籍';
+        state.editingBookId = editBookId;
+        loadBookForEdit(editBookId);
+    } else {
+        document.getElementById('editor-title').textContent = '📝 编写新书';
+        state.editingBookId = null;
+        state.chapters = [];
+        document.getElementById('book-title').value = '';
+        document.getElementById('book-cover-color').value = '#2a2a3a';
+        document.getElementById('book-desc').value = '';
+        renderChapters();
+    }
+}
+function openEditor(editBookId) {
+    if (!state.user) { openAuth(); return; }
+    showEditor(editBookId || null);
+}
+function closeEditor() {
+    state.editingBookId = null;
+    state.chapters = [];
+    showLibrary();
+}
+
+function addChapter(title, content) {
+    state.chapters.push({
+        id: Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        title: title || '新章节',
+        content: content || '',
+        order_index: state.chapters.length
+    });
+    renderChapters();
+}
+function removeChapter(index) {
+    if (state.chapters.length <= 1) { showToast('至少保留一个章节', 'error'); return; }
+    state.chapters.splice(index, 1);
+    renderChapters();
+}
+function moveChapterUp(index) {
+    if (index === 0) return;
+    [state.chapters[index], state.chapters[index - 1]] = [state.chapters[index - 1], state.chapters[index]];
+    renderChapters();
+}
+function moveChapterDown(index) {
+    if (index === state.chapters.length - 1) return;
+    [state.chapters[index], state.chapters[index + 1]] = [state.chapters[index + 1], state.chapters[index]];
+    renderChapters();
+}
+
+/* ===== 章节编辑器 ===== */
+function initChapterQuill() {
+    if (state.chapterQuill) return;
+    state.chapterQuill = new Quill('#chapter-quill', {
+        theme: 'snow',
+        placeholder: '写点什么...',
+        modules: {
+            toolbar: {
+                container: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                    ['blockquote', 'code-block'],
+                    ['link'],
+                    ['clean'],
+                    ['image']
+                ],
+                handlers: {
+                    'image': function() {
+                        openImgUrlModal('chapter');
+                    }
+                }
+            }
+        }
+    });
+}
+
+function openChapterEdit(index) {
+    state.chapterEditIndex = index;
+    const ch = state.chapters[index];
+    document.getElementById('chapter-edit-title').textContent = '编辑章节: ' + ch.title;
+    document.getElementById('chapter-edit-name').value = ch.title;
+    document.getElementById('chapter-edit-modal').classList.add('active');
+    document.getElementById('chapter-edit-modal').classList.remove('closing');
+    setTimeout(() => {
+        initChapterQuill();
+        const content = ch.content || '';
+        if (/<(p|h[1-6]|ul|ol|li|blockquote|pre|strong|em|a|img|br|div|span)[\s>]/i.test(content)) {
+            state.chapterQuill.root.innerHTML = content;
+        } else {
+            // 纯文本转段落
+            state.chapterQuill.root.innerHTML = content.split('\n').map(line => `<p>${escapeHtml(line) || '<br>'}</p>`).join('');
+        }
+    }, 50);
+}
+function closeChapterEdit() {
+    const overlay = document.getElementById('chapter-edit-modal');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+function saveChapterEdit() {
+    const idx = state.chapterEditIndex;
+    if (idx === -1) return;
+    const title = document.getElementById('chapter-edit-name').value.trim();
+    const content = state.chapterQuill.root.innerHTML;
+    if (!title) { showToast('章节标题不能为空', 'error'); return; }
+    state.chapters[idx].title = title;
+    state.chapters[idx].content = content;
+    closeChapterEdit();
+    renderChapters();
+    showToast('章节已更新', 'success');
+}
+
+function renderChapters() {
+    const container = document.getElementById('chapters-list');
+    if (state.chapters.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-tertiary);padding:16px;text-align:center;font-size:13px;">还没有章节，点击下方添加</div>';
+        return;
+    }
+    container.innerHTML = state.chapters.map((ch, i) => `
+        <div class="chapter-item">
+            <span class="ch-title" onclick="openChapterEdit(${i})">${i+1}. ${escapeHtml(ch.title)}</span>
+            <div class="ch-actions">
+                <button class="edit-chapter-btn" onclick="openChapterEdit(${i})">✏️</button>
+                ${i > 0 ? `<button onclick="moveChapterUp(${i})">↑</button>` : ''}
+                ${i < state.chapters.length - 1 ? `<button onclick="moveChapterDown(${i})">↓</button>` : ''}
+                <button class="danger" onclick="removeChapter(${i})">✕</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+/* ===== 插入图片 URL 弹窗 ===== */
+function openImgUrlModal(target) {
+    state.imgUrlTarget = target;
+    document.getElementById('img-url-input').value = '';
+    document.getElementById('img-url-modal').classList.add('active');
+    setTimeout(() => document.getElementById('img-url-input').focus(), 100);
+}
+function closeImgUrlModal() {
+    document.getElementById('img-url-modal').classList.remove('active');
+}
+function insertImgFromUrl() {
+    const url = document.getElementById('img-url-input').value.trim();
+    if (!url) { showToast('请输入图片链接', 'error'); return; }
+    // 验证是不是图片
+    if (!/^https?:\/\//i.test(url)) {
+        showToast('请输入有效的 http(s) 链接', 'error');
+        return;
+    }
+    if (state.chapterQuill) {
+        const range = state.chapterQuill.getSelection(true);
+        state.chapterQuill.insertEmbed(range.index, 'image', url, 'user');
+        state.chapterQuill.setSelection(range.index + 1);
+    }
+    closeImgUrlModal();
+}
+
+/* ===== 保存书籍 ===== */
+async function saveBook(status) {
+    if (!state.user) { openAuth(); return; }
+    const title = document.getElementById('book-title').value.trim();
+    if (!title) { showToast('请填写书名', 'error'); return; }
+    if (state.chapters.length === 0) { showToast('请至少添加一个章节', 'error'); return; }
+    for (const ch of state.chapters) {
+        const textOnly = (ch.content || '').replace(/<[^>]+>/g, '').trim();
+        if (!textOnly && !(ch.content || '').includes('<img')) {
+            showToast('章节 "' + ch.title + '" 内容为空，请填写', 'error');
+            return;
+        }
+    }
+    const coverColor = document.getElementById('book-cover-color').value;
+    const description = document.getElementById('book-desc').value.trim();
+    const btn = document.querySelector('.publish-btn');
+    const origText = btn.textContent;
+    btn.textContent = '保存中...';
+    btn.disabled = true;
+    try {
+        let bookId = state.editingBookId;
+        if (bookId) {
+            const { error: updateErr } = await SB.from('books')
+                .update({ title, cover_color: coverColor, description, status, updated_at: new Date().toISOString() })
+                .eq('id', bookId);
+            if (updateErr) throw updateErr;
+            await SB.from('chapters').delete().eq('book_id', bookId);
+            for (let i = 0; i < state.chapters.length; i++) {
+                const { error: chErr } = await SB.from('chapters').insert({
+                    book_id: bookId,
+                    title: state.chapters[i].title,
+                    content: state.chapters[i].content,
+                    order_index: i
+                });
+                if (chErr) throw chErr;
+            }
+            showToast(status === 'published' ? '📤 书籍已更新并发布' : '💾 草稿已保存', 'success');
+        } else {
+            const { data: book, error: bookErr } = await SB.from('books').insert({
+                title, author: state.user, cover_color: coverColor, description, status, is_pinned: false
+            }).select().single();
+            if (bookErr) throw bookErr;
+            bookId = book.id;
+            for (let i = 0; i < state.chapters.length; i++) {
+                const { error: chErr } = await SB.from('chapters').insert({
+                    book_id: bookId,
+                    title: state.chapters[i].title,
+                    content: state.chapters[i].content,
+                    order_index: i
+                });
+                if (chErr) throw chErr;
+            }
+            showToast(status === 'published' ? '📤 书籍已发布！' : '💾 草稿已保存', 'success');
+        }
+        closeEditor();
+        loadBooks();
+    } catch (err) {
+        showToast('保存失败: ' + err.message, 'error');
+    } finally {
+        btn.textContent = origText;
+        btn.disabled = false;
+    }
+}
+
+async function loadBookForEdit(bookId) {
+    try {
+        const { data: book, error: bookErr } = await SB.from('books').select('*').eq('id', bookId).single();
+        if (bookErr) throw bookErr;
+        if (book.author !== state.user && state.role !== 'admin') {
+            showToast('你没有权限编辑此书', 'error');
+            closeEditor();
+            return;
+        }
+        document.getElementById('book-title').value = book.title;
+        document.getElementById('book-cover-color').value = book.cover_color || '#2a2a3a';
+        document.getElementById('book-desc').value = book.description || '';
+        const { data: chapters, error: chErr } = await SB.from('chapters')
+            .select('*').eq('book_id', bookId).order('order_index', { ascending: true });
+        if (chErr) throw chErr;
+        state.chapters = chapters.map(ch => ({
+            id: ch.id,
+            title: ch.title,
+            content: ch.content || '',
+            order_index: ch.order_index || 0
+        }));
+        renderChapters();
+        state.editingBookId = bookId;
+    } catch (err) {
+        showToast('加载失败: ' + err.message, 'error');
+        closeEditor();
+    }
+}
+
+async function loadBooks() {
+    const grid = document.getElementById('library-grid');
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-tertiary);padding:60px 20px;">加载中...</div>';
+    try {
+        let query = SB.from('books').select('*');
+        if (state.showDrafts) {
+            if (!state.user) { openAuth(); return; }
+            query = query.eq('author', state.user).eq('status', 'draft');
+        } else if (state.showMyBooks) {
+            if (!state.user) { openAuth(); return; }
+            query = query.eq('author', state.user);
+        } else {
+            query = query.eq('status', 'published');
+        }
+        query = query.order('is_pinned', { ascending: false }).order('created_at', { ascending: false });
+        const { data: books, error } = await query;
+        if (error) throw error;
+        if (!books || books.length === 0) {
+            const emptyMsg = state.showDrafts ? t('drafts_empty') : t('library_empty');
+            grid.innerHTML = `<div class="empty-state"><div class="icon">📚</div><div class="text">${emptyMsg}</div></div>`;
+            return;
+        }
+        const bookIds = books.map(b => b.id);
+        const { data: chapters } = await SB.from('chapters').select('book_id').in('book_id', bookIds);
+        const chapterCounts = {};
+        if (chapters) chapters.forEach(ch => { chapterCounts[ch.book_id] = (chapterCounts[ch.book_id] || 0) + 1; });
+        grid.innerHTML = books.map(book => {
+            const statusText = book.status === 'published' ? t('published') : t('draft');
+            const statusClass = book.status === 'published' ? 'published' : 'draft';
+            const chCount = chapterCounts[book.id] || 0;
+            return `
+                <div class="book-card" onclick="readBook(${book.id})">
+                    <div class="cover" style="background:${book.cover_color || '#2a2a3a'};"></div>
+                    ${book.is_pinned ? '<div class="pin-badge">📌</div>' : ''}
+                    <div class="book-status ${statusClass}">${statusText}</div>
+                    <div class="cover-content">
+                        <div class="book-title">${escapeHtml(book.title)}</div>
+                        <div class="book-author">${escapeHtml(book.author)} · ${chCount}章</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        grid.innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><div class="text">加载失败: ${err.message}</div></div>`;
+    }
+}
+
+function showMyBooks() {
+    state.showMyBooks = !state.showMyBooks;
+    state.showDrafts = false;
+    if (state.showMyBooks && !state.user) { state.showMyBooks = false; openAuth(); return; }
+    const btn = document.getElementById('my-books-btn');
+    btn.textContent = state.showMyBooks ? t('all_books') : t('my_books');
+    const draftBtn = document.getElementById('drafts-btn');
+    draftBtn.textContent = t('drafts');
+    loadBooks();
+}
+function showDrafts() {
+    state.showDrafts = !state.showDrafts;
+    state.showMyBooks = false;
+    if (state.showDrafts && !state.user) { state.showDrafts = false; openAuth(); return; }
+    const btn = document.getElementById('drafts-btn');
+    btn.textContent = state.showDrafts ? t('all_books') : t('drafts');
+    const myBtn = document.getElementById('my-books-btn');
+    myBtn.textContent = t('my_books');
+    loadBooks();
+}
+
+/* ===== 阅读页 ===== */
+async function readBook(bookId) {
+    try {
+        const { data: book, error: bookErr } = await SB.from('books').select('*').eq('id', bookId).single();
+        if (bookErr) throw bookErr;
+        const { data: chapters, error: chErr } = await SB.from('chapters')
+            .select('*').eq('book_id', bookId).order('order_index', { ascending: true });
+        if (chErr) throw chErr;
+        if (chapters.length === 0) { showToast('这本书还没有章节', 'error'); return; }
+
+        document.getElementById('library-page').style.display = 'none';
+        document.getElementById('editor-page').style.display = 'none';
+        document.getElementById('read-page').style.display = 'block';
+        // 阅读时隐藏顶栏
+        document.getElementById('top-bar').classList.add('hidden');
+
+        state.readingBookId = bookId;
+        state.readingChapters = chapters;
+        state.currentChapterIndex = 0;
+
+        document.getElementById('read-title').textContent = book.title;
+        document.getElementById('read-meta').textContent =
+            `作者: ${book.author}  ·  ${chapters.length} 章  ·  ${book.status === 'published' ? '已发布' : '草稿'}`;
+
+        const chapterList = document.getElementById('chapter-list');
+        chapterList.innerHTML = chapters.map((ch, idx) => `
+            <button class="ch-link ${idx === 0 ? 'active' : ''}" onclick="goToChapter(${idx})">${idx+1}. ${escapeHtml(ch.title)}</button>
+        `).join('');
+
+        await loadLikeState(bookId);
+        await loadLikeCount(bookId);
+        await loadComments(bookId);
+
+        renderChapter(0);
+        renderReadActions(book);
+
+        window.scrollTo(0, 0);
+    } catch (err) {
+        showToast('加载失败: ' + err.message, 'error');
+    }
+}
+
+function renderReadActions(book) {
+    const isAdmin = state.user === ADMIN_USER || state.role === 'admin';
+    const isOwner = state.user === book.author;
+    let html = '';
+    html += `<button class="${state.currentLikeState ? 'liked' : ''}" id="like-btn" onclick="toggleLike()">${state.currentLikeState ? t('liked') : t('like')} <span id="like-count">0</span></button>`;
+    if (isOwner || isAdmin) {
+        html += `<button onclick="openEditor(${book.id})">✏️ ${t('edit')}</button>`;
+    }
+    if (isAdmin) {
+        html += `<button onclick="togglePin(${book.id}, ${book.is_pinned})">${book.is_pinned ? '📍 取消置顶' : '📌 置顶'}</button>`;
+        html += `<button class="danger" onclick="deleteBook(${book.id})">${t('delete')}</button>`;
+    }
+    html += `<button onclick="closeRead()">✕ ${t('close')}</button>`;
+    document.getElementById('read-actions').innerHTML = html;
+}
+
+function toggleToc() {
+    document.getElementById('read-toc').classList.toggle('open');
+}
+
+function renderChapter(index) {
+    const ch = state.readingChapters[index];
+    if (!ch) return;
+    document.getElementById('read-body').innerHTML = renderContent(ch.content || '');
+    document.querySelectorAll('.read-toc .ch-link').forEach((el, idx) => {
+        el.classList.toggle('active', idx === index);
+    });
+    document.getElementById('page-indicator').textContent = `${index + 1} / ${state.readingChapters.length}`;
+    document.getElementById('prev-chapter').disabled = index === 0;
+    document.getElementById('next-chapter').disabled = index === state.readingChapters.length - 1;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goToChapter(index) {
+    if (index < 0 || index >= state.readingChapters.length) return;
+    state.currentChapterIndex = index;
+    renderChapter(index);
+}
+function nextChapter() {
+    if (state.currentChapterIndex < state.readingChapters.length - 1) {
+        state.currentChapterIndex++;
+        renderChapter(state.currentChapterIndex);
+    }
+}
+function prevChapter() {
+    if (state.currentChapterIndex > 0) {
+        state.currentChapterIndex--;
+        renderChapter(state.currentChapterIndex);
+    }
+}
+function closeRead() {
+    document.getElementById('read-page').style.display = 'none';
+    document.getElementById('top-bar').classList.remove('hidden');
+    showLibrary();
+}
+
+/* ===== 点赞 ===== */
+async function loadLikeState(bookId) {
+    if (!state.user) {
+        state.currentLikeState = false;
+        return;
+    }
+    try {
+        const { data } = await SB.from('book_likes')
+            .select('id').eq('book_id', bookId).eq('username', state.user);
+        state.currentLikeState = data && data.length > 0;
+    } catch (err) {}
+}
+async function loadLikeCount(bookId) {
+    try {
+        const { count } = await SB.from('book_likes')
+            .select('id', { count: 'exact', head: true })
+            .eq('book_id', bookId);
+        state.currentLikeCount = count || 0;
+        const el = document.getElementById('like-count');
+        if (el) el.textContent = state.currentLikeCount;
+    } catch (err) {}
+}
+async function toggleLike() {
+    if (!state.user) { showToast(t('login_to_like'), 'error'); openAuth(); return; }
+    const bookId = state.readingBookId;
+    if (!bookId) return;
+    try {
+        if (state.currentLikeState) {
+            await SB.from('book_likes').delete().eq('book_id', bookId).eq('username', state.user);
+            state.currentLikeState = false;
+        } else {
+            await SB.from('book_likes').insert({ book_id: bookId, username: state.user });
+            state.currentLikeState = true;
+        }
+        await loadLikeCount(bookId);
+        const btn = document.getElementById('like-btn');
+        if (btn) {
+            btn.className = state.currentLikeState ? 'liked' : '';
+            btn.innerHTML = `${state.currentLikeState ? t('liked') : t('like')} <span id="like-count">${state.currentLikeCount}</span>`;
+        }
+    } catch (err) {
+        showToast('操作失败: ' + err.message, 'error');
+    }
+}
+
+/* ===== 评论 ===== */
+async function loadComments(bookId) {
+    const container = document.getElementById('comments-list');
+    try {
+        const { data, error } = await SB.from('book_comments')
+            .select('*').eq('book_id', bookId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:16px 0;text-align:center;">' + t('no_comments') + '</div>';
+            return;
+        }
+        const usernames = [...new Set(data.map(c => c.username))];
+        let roleMap = {};
+        if (usernames.length > 0) {
+            const { data: users } = await SB.from('users').select('username, role').in('username', usernames);
+            if (users) users.forEach(u => { roleMap[u.username] = u.role; });
+        }
+        const isAdminUser = state.user === ADMIN_USER || state.role === 'admin';
+        container.innerHTML = data.map(c => {
+            const isDeleted = c.is_deleted === true;
+            const isCommentAdmin = roleMap[c.username] === 'admin' || c.username === ADMIN_USER;
+            const canDelete = state.user && (c.username === state.user || isAdminUser);
+            let contentHtml = isDeleted
+                ? `<div class="cmt-deleted">该评论已删除</div>`
+                : `<div class="cmt-content">${escapeHtml(c.content)}</div>`;
+            let actionsHtml = '';
+            if (canDelete && !isDeleted) {
+                actionsHtml = `<button onclick="deleteComment('${c.id}')" title="删除">🗑️</button>`;
+            }
+            let adminTagHtml = '';
+            if (isCommentAdmin && !isDeleted) {
+                adminTagHtml = `<span class="admin-tag">${t('admin_tag')}</span>`;
+            }
+            return `
+                <div class="comment-item">
+                    <div class="cmt-header">
+                        <div>
+                            <span class="cmt-user">${escapeHtml(c.username)}${adminTagHtml}</span>
+                            <span class="cmt-time">${new Date(c.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="cmt-actions">${actionsHtml}</div>
+                    </div>
+                    ${contentHtml}
+                </div>
+            `;
+        }).join('');
+    } catch (err) { console.error('加载评论失败:', err); }
+}
+
+async function deleteComment(commentId) {
+    if (!confirm(t('delete_comment_confirm'))) return;
+    try {
+        await SB.from('book_comments').update({ is_deleted: true }).eq('id', commentId);
+        showToast(t('comment_deleted'), 'success');
+        await loadComments(state.readingBookId);
+    } catch (err) {
+        showToast('删除失败: ' + err.message, 'error');
+    }
+}
+
+async function submitComment() {
+    if (!state.user) { showToast(t('login_to_comment'), 'error'); openAuth(); return; }
+    const input = document.getElementById('comment-input');
+    const content = input.value.trim();
+    if (!content) return;
+    const btn = document.getElementById('comment-btn');
+    btn.disabled = true;
+    btn.textContent = '发送中...';
+    try {
+        const { error } = await SB.from('book_comments').insert({
+            book_id: state.readingBookId,
+            username: state.user,
+            content: content,
+            is_deleted: false
+        });
+        if (error) throw error;
+        input.value = '';
+        showToast(t('comment_success'), 'success');
+        await loadComments(state.readingBookId);
+    } catch (err) {
+        showToast('发送失败: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = t('comment_send');
+    }
+}
+
+/* ===== 发布/降为草稿/删除/置顶 ===== */
+async function publishBook(bookId) {
+    openConfirm(t('confirm_publish_title'), t('confirm_publish_desc'), async () => {
+        const { error } = await SB.from('books')
+            .update({ status: 'published', updated_at: new Date().toISOString() }).eq('id', bookId);
+        if (error) { showToast('发布失败: ' + error.message, 'error'); return; }
+        showToast('📤 已发布', 'success');
+        loadBooks();
+        if (document.getElementById('read-page').style.display !== 'none') readBook(bookId);
+    });
+}
+async function unpublishBook(bookId) {
+    openConfirm(t('confirm_unpublish_title'), t('confirm_unpublish_desc'), async () => {
+        const { error } = await SB.from('books')
+            .update({ status: 'draft', updated_at: new Date().toISOString() }).eq('id', bookId);
+        if (error) { showToast('操作失败: ' + error.message, 'error'); return; }
+        showToast('📥 已降为草稿', 'success');
+        loadBooks();
+        if (document.getElementById('read-page').style.display !== 'none') showLibrary();
+    });
+}
+async function deleteBook(bookId) {
+    openConfirm(t('confirm_delete_title'), t('confirm_delete_desc'), async () => {
+        const { data, error } = await SB.rpc('admin_delete_book', {
+            operator: state.user, p_book_id: bookId
+        });
+        if (error || !data || !data.ok) {
+            showToast((data && data.msg) || '删除失败', 'error');
+            return;
+        }
+        showToast('已删除', 'success');
+        loadBooks();
+        if (document.getElementById('read-page').style.display !== 'none') showLibrary();
+    });
+}
+async function togglePin(bookId, currentState) {
+    const { data, error } = await SB.rpc('admin_toggle_pin', {
+        operator: state.user, book_id: bookId
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '操作失败', 'error');
+        return;
+    }
+    showToast(data.pinned ? '📌 已置顶' : '📍 已取消置顶', 'success');
+    loadBooks();
+    if (document.getElementById('read-page').style.display !== 'none') readBook(bookId);
+}
+
+/* ===== 键盘 ===== */
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        if (document.getElementById('auth-overlay').classList.contains('active')) closeAuth();
+        if (document.getElementById('uc-overlay').classList.contains('active')) closeUserCenter();
+        if (document.getElementById('admin-overlay').classList.contains('active')) closeAdminPanel();
+        if (document.getElementById('confirm-overlay').classList.contains('active')) closeConfirm();
+        if (document.getElementById('chapter-edit-modal').classList.contains('active')) closeChapterEdit();
+        if (document.getElementById('img-url-modal').classList.contains('active')) closeImgUrlModal();
+        if (document.getElementById('read-page').style.display !== 'none') closeRead();
+    }
+    if (document.getElementById('read-page').style.display !== 'none') {
+        if (e.key === 'ArrowRight') { e.preventDefault(); nextChapter(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevChapter(); }
+    }
+    if (e.key === 'Enter' && document.getElementById('read-page').style.display !== 'none') {
+        const input = document.getElementById('comment-input');
+        if (document.activeElement === input) { e.preventDefault(); submitComment(); }
+    }
+});
+
+/* 粒子 */
+(function () {
+    const canvas = document.getElementById('particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0;
+    const particles = [];
+    const COUNT = 180, MIN_R = 0.8, MAX_R = 1.8, MIN_A = 0.03, MAX_A = 0.10, SPEED = 0.2;
+    const MOUSE_RADIUS = 120, MOUSE_FORCE = 0.3;
+    const mouse = { x: -9999, y: -9999 };
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
+    function createParticle() {
+        return { x: Math.random() * W, y: Math.random() * H, r: rand(MIN_R, MAX_R), a: rand(MIN_A, MAX_A), vx: rand(-SPEED, SPEED), vy: rand(-SPEED, SPEED), twinkle: rand(0, Math.PI * 2), twinkleSpeed: rand(0.005, 0.015) };
+    }
+    function init() { resize(); particles.length = 0; for (let i = 0; i < COUNT; i++) particles.push(createParticle()); }
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const dx = p.x - mouse.x, dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_RADIUS && dist > 0.1) {
+                const strength = (1 - dist / MOUSE_RADIUS) * MOUSE_FORCE;
+                p.vx += (dx / dist) * strength; p.vy += (dy / dist) * strength;
+            }
+            p.x += p.vx; p.y += p.vy; p.vx *= 0.97; p.vy *= 0.97;
+            if (Math.abs(p.vx) < 0.05) p.vx += (Math.random() - 0.5) * 0.02;
+            if (Math.abs(p.vy) < 0.05) p.vy += (Math.random() - 0.5) * 0.02;
+            p.twinkle += p.twinkleSpeed;
+            const breath = (Math.sin(p.twinkle) + 1) / 2;
+            const alpha = p.a * (0.4 + breath * 0.6);
+            if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+            if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')'; ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', function () { resize(); for (let i = 0; i < particles.length; i++) { particles[i].x = Math.random() * W; particles[i].y = Math.random() * H; } });
+    window.addEventListener('mousemove', function (e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', function () { mouse.x = -9999; mouse.y = -9999; });
+    window.addEventListener('touchmove', function (e) { if (e.touches.length > 0) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } }, { passive: true });
+    window.addEventListener('touchend', function () { mouse.x = -9999; mouse.y = -9999; });
+    if (document.readyState === 'complete' || document.readyState === 'interactive') { setTimeout(init, 0); }
+    else { document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 0); }); }
+    requestAnimationFrame(draw);
+})();
+
+async function boot() {
+    await initSB();
+    if (state.user) { updateUI(); updateAvatarUI(); }
+    else { updateUI(); updateAvatarUI(); }
+    applyLang();
+    loadBooks();
+}
+
+boot();
+
+Object.assign(window, {
+    goBack, openAuth, closeAuth, toggleAuthMode, handleAuth,
+    openUserCenter, closeUserCenter, logoutUser, handleUCAvatar, saveUCProfile, previewAvatar,
+    switchLang, openAdminPanel, closeAdminPanel, setUserRole, deleteUser, loadUserList,
+    openEditor, closeEditor, addChapter, removeChapter, moveChapterUp, moveChapterDown,
+    openChapterEdit, closeChapterEdit, saveChapterEdit, saveBook, loadBooks,
+    showMyBooks, showDrafts, readBook, goToChapter, nextChapter, prevChapter,
+    closeRead, publishBook, unpublishBook, deleteBook, togglePin,
+    showLibrary, openConfirm, closeConfirm, confirmAction,
+    toggleLike, submitComment, deleteComment, loadComments, loadLikeState, loadLikeCount,
+    loadUserBooksAndStats, toggleToc,
+    openImgUrlModal, closeImgUrlModal, insertImgFromUrl
+});
+
+console.log('APE 藏书阁已加载 · 富文本 + 图床链接');
+</script>
+</body>
+</html>

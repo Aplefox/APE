@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>APE · 官方主页</title>
+<link rel="icon" type="image/png" href="https://s3.bmp.ovh/2026/09/02/yCkTXnjy.png">
+<link rel="preconnect" href="https://fonts.font.im">
+<link href="https://fonts.font.im/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    :root {
+        --primary: #888;
+        --bg: #0a0a0f;
+        --text: #f0f0f5;
+        --text-secondary: rgba(255,255,255,0.6);
+        --text-tertiary: rgba(255,255,255,0.3);
+        --border: rgba(255,255,255,0.08);
+        --card-bg: rgba(255,255,255,0.04);
+        --card-hover: rgba(255,255,255,0.07);
+        --radius: 16px;
+        --notice: #ffd700;
+    }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-weight: 400;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    #particles {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: 1;
+        pointer-events: none;
+        display: block;
+    }
+
+    .hero-bg {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 80vh;
+        background-image: url('https://img.remit.ee/i/sEmPNciOtV4H');
+        background-position: center top;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-color: var(--bg);
+        z-index: 0;
+        pointer-events: none;
+    }
+    .hero-bg::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to bottom,
+            rgba(10,10,15,0.35) 0%,
+            rgba(10,10,15,0.55) 55%,
+            rgba(10,10,15,0.85) 85%,
+            rgba(10,10,15,1) 100%
+        );
+        pointer-events: none;
+    }
+
+    .navbar, .page { position: relative; z-index: 2; }
+
+    .navbar {
+        position: fixed;
+        top: 20px;
+        left: 24px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        z-index: 1000;
+    }
+    .navbar .nav-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .navbar .nav-item {
+        height: 40px;
+        min-width: 40px;
+        padding: 0 14px;
+        border-radius: 10px;
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        gap: 8px;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        white-space: nowrap;
+    }
+    .navbar .nav-item:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .navbar .nav-item.avatar {
+        width: 40px;
+        padding: 0;
+        overflow: hidden;
+        font-weight: 500;
+        font-size: 14px;
+    }
+    .navbar .nav-item.avatar img {
+        width: 100%; height: 100%; object-fit: cover;
+    }
+    .navbar .nav-item.cmd-btn {
+        width: 40px;
+        padding: 0;
+        font-family: 'Inter', monospace;
+        font-size: 14px;
+    }
+    .navbar .nav-item.chat-btn {
+        padding: 0 18px;
+        color: #fff;
+        background: rgba(80, 140, 255, 0.15);
+        border-color: rgba(80, 140, 255, 0.35);
+    }
+    .navbar .nav-item.chat-btn:hover {
+        background: rgba(80, 140, 255, 0.28);
+        border-color: rgba(80, 140, 255, 0.6);
+    }
+    .navbar .lang-select {
+        height: 40px;
+        padding: 0 32px 0 14px;
+        border-radius: 10px;
+        background-color: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        transition: background-color 0.15s, color 0.15s;
+    }
+    .navbar .lang-select:hover { background-color: rgba(20,20,26,0.9); color: #fff; }
+    .navbar .lang-select option { background: var(--bg); color: var(--text); }
+
+    .page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 220px 24px 80px;
+    }
+    .hero-title {
+        font-size: clamp(64px, 12vw, 120px);
+        font-weight: 700;
+        letter-spacing: -3px;
+        line-height: 1;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 12px;
+    }
+    .hero-sub {
+        font-size: 15px;
+        font-weight: 300;
+        color: var(--text-tertiary);
+        letter-spacing: 3px;
+        margin-bottom: 64px;
+    }
+
+    .cards {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+    .card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 28px 28px;
+        background: rgba(10,10,15,0.55);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        cursor: pointer;
+        transition: background 0.15s, border-color 0.15s;
+        text-decoration: none;
+        color: inherit;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+    .card:hover {
+        background: rgba(20,20,26,0.7);
+        border-color: rgba(255,255,255,0.18);
+    }
+    .card:hover .card-arrow {
+        transform: translateX(4px);
+        color: #fff;
+    }
+    .card-info {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+        min-width: 0;
+    }
+    .card-title {
+        font-size: 22px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.9);
+        letter-spacing: -0.3px;
+    }
+    .card-desc {
+        font-size: 13px;
+        font-weight: 300;
+        color: var(--text-secondary);
+        letter-spacing: 0.3px;
+        line-height: 1.5;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .card-arrow {
+        font-size: 22px;
+        color: var(--text-tertiary);
+        margin-left: 20px;
+        flex-shrink: 0;
+        transition: transform 0.2s, color 0.2s;
+        font-weight: 300;
+    }
+
+    /* 公告卡片激活时黄色 */
+    .card.notice-active {
+        background: rgba(255, 215, 0, 0.08);
+        border-color: rgba(255, 215, 0, 0.35);
+    }
+    .card.notice-active:hover {
+        background: rgba(255, 215, 0, 0.14);
+        border-color: rgba(255, 215, 0, 0.55);
+    }
+    .card.notice-active .card-title {
+        color: var(--notice);
+    }
+    .card.notice-active .card-arrow {
+        color: rgba(255, 215, 0, 0.6);
+    }
+    .card.notice-active:hover .card-arrow {
+        color: var(--notice);
+    }
+
+    /* Toast */
+    #toast-container {
+        position: fixed; bottom: 80px; left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999; pointer-events: none;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+    }
+    .toast-item {
+        padding: 8px 24px; border-radius: 6px;
+        background: rgba(0,0,0,0.9);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; font-size: 13px;
+        animation: toastIn 0.2s ease;
+    }
+    .toast-item.error { border-color: rgba(231,76,60,0.4); }
+    .toast-item.success { border-color: rgba(76,175,80,0.4); }
+    @keyframes toastIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+    .modal-overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.8);
+        justify-content: center; align-items: center;
+        z-index: 20000;
+        padding: 20px;
+        animation: overlayIn 0.15s ease;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-overlay.closing { animation: overlayOut 0.15s ease forwards; }
+    @keyframes overlayIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+    @keyframes overlayOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+    .modal-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        width: 100%; max-width: 500px;
+        max-height: 85vh; overflow-y: auto;
+    }
+    .modal-box h3 {
+        color: #fff; font-size: 20px;
+        font-weight: 600; margin-bottom: 8px;
+    }
+    .modal-box .modal-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 20px;
+        line-height: 1.6;
+    }
+    .modal-box .modal-field {
+        margin-bottom: 14px;
+    }
+    .modal-box .modal-field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .modal-box .modal-field input,
+    .modal-box .modal-field textarea {
+        width: 100%;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        resize: vertical;
+        line-height: 1.6;
+    }
+    .modal-box .modal-field textarea { min-height: 140px; }
+    .modal-box .modal-field input:focus,
+    .modal-box .modal-field textarea:focus { border-color: rgba(255,255,255,0.2); }
+    .modal-box .modal-actions {
+        display: flex; gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap; justify-content: flex-end;
+    }
+    .modal-box .modal-actions button {
+        padding: 10px 20px;
+        border-radius: 8px; border: none;
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .modal-box .modal-actions .save-btn {
+        background: var(--primary); color: #fff;
+    }
+    .modal-box .modal-actions .save-btn:hover { background: #999; }
+    .modal-box .modal-actions .danger-btn {
+        background: rgba(231,76,60,0.15);
+        color: #ff6b6b;
+        border: 1px solid rgba(231,76,60,0.3);
+    }
+    .modal-box .modal-actions .danger-btn:hover { background: rgba(231,76,60,0.3); color: #fff; }
+    .modal-box .modal-actions .cancel-btn {
+        background: rgba(255,255,255,0.06);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    .modal-box .modal-actions .cancel-btn:hover { background: rgba(255,255,255,0.1); }
+
+    .join-modal .modal-box { max-width: 480px; }
+    .join-option {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 12px;
+    }
+    .join-option .opt-title {
+        font-size: 15px; font-weight: 600;
+        color: #fff; margin-bottom: 6px;
+    }
+    .join-option .opt-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 12px;
+        line-height: 1.5;
+    }
+    .opt-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text-secondary);
+        padding: 8px 18px;
+        font-size: 13px; cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .opt-btn:hover {
+        background: rgba(255,255,255,0.06);
+        color: #fff;
+        border-color: rgba(255,255,255,0.2);
+    }
+    .opt-btn.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .opt-btn.primary:hover { background: #999; border-color: #999; }
+    .input-group {
+        display: flex; gap: 10px;
+        margin-top: 8px; flex-wrap: wrap;
+    }
+    .input-group input {
+        flex: 1;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 14px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        min-width: 140px;
+    }
+    .input-group input:focus { border-color: rgba(255,255,255,0.2); }
+
+    .cmd-window {
+        position: fixed; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        width: 520px; max-width: 90vw;
+        z-index: 10001;
+        display: none; flex-direction: column;
+        min-height: 300px; max-height: 70vh;
+        overflow: hidden;
+    }
+    .cmd-window.active { display: flex; }
+    .cmd-header {
+        display: flex; justify-content: space-between;
+        align-items: center;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        cursor: grab; user-select: none;
+    }
+    .cmd-header:active { cursor: grabbing; }
+    .cmd-title {
+        font-size: 13px; color: var(--text-tertiary);
+        letter-spacing: 2px;
+    }
+    .cmd-close-btn {
+        background: none; border: none;
+        color: var(--text-tertiary);
+        font-size: 20px; cursor: pointer;
+        padding: 0 6px;
+    }
+    .cmd-close-btn:hover { color: #fff; }
+    .cmd-body {
+        padding: 20px;
+        flex: 1; display: flex; flex-direction: column;
+        min-height: 0;
+    }
+    .cmd-row { display: flex; gap: 10px; }
+    .cmd-input {
+        flex: 1;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: #fff; font-size: 14px;
+        font-family: 'Inter', monospace;
+        outline: none;
+    }
+    .cmd-input:focus { border-color: rgba(255,255,255,0.2); }
+    .cmd-send {
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 0 20px;
+        color: var(--text-secondary);
+        font-size: 15px; cursor: pointer;
+    }
+    .cmd-send:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .cmd-output {
+        margin-top: 14px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        overflow-y: auto; flex: 1;
+        white-space: pre-wrap;
+        line-height: 1.7;
+        font-family: 'Inter', monospace;
+        max-height: 35vh;
+        background: rgba(0,0,0,0.3);
+        border-radius: 8px;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+    }
+    .cmd-output .hl { color: #69db7c; }
+    .cmd-output .err { color: #ff6b6b; }
+    .cmd-output .info { color: #74c0fc; }
+    .cmd-output .dim { color: rgba(255,255,255,0.3); }
+
+    #color-picker {
+        display: none; flex-direction: column;
+        align-items: center; margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid var(--border);
+        gap: 10px;
+    }
+    #color-picker.active { display: flex; }
+    .slider-group { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+    .slider-row {
+        display: flex; align-items: center;
+        gap: 8px; font-size: 12px;
+        color: var(--text-secondary);
+    }
+    .slider-row input[type="range"] {
+        width: 80px; accent-color: var(--primary);
+        cursor: pointer;
+    }
+    .preview-row { display: flex; align-items: center; gap: 10px; }
+    .preview-color {
+        width: 32px; height: 32px;
+        border-radius: 50%;
+        border: 1px solid var(--border);
+    }
+    #hex-display {
+        font-size: 13px;
+        font-family: monospace;
+        color: var(--text-secondary);
+    }
+    .apply-color-btn {
+        padding: 8px 24px;
+        border-radius: 24px; border: none;
+        background: var(--primary); color: #fff;
+        font-size: 13px; font-weight: 500;
+        cursor: pointer;
+    }
+    .apply-color-btn:hover { background: #999; }
+
+    .overlay {
+        display: none; position: fixed; inset: 0;
+        background: rgba(0,0,0,0.8);
+        justify-content: center; align-items: center;
+        z-index: 10000;
+        padding: 20px;
+        animation: overlayIn 0.15s ease;
+    }
+    .overlay.active { display: flex; }
+    .overlay.closing { animation: overlayOut 0.15s ease forwards; }
+
+    .uc-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        text-align: center;
+        width: 100%; max-width: 360px;
+    }
+    .uc-box .avatar {
+        width: 64px; height: 64px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: rgba(255,255,255,0.06);
+        border: 2px solid var(--border);
+        margin-bottom: 12px;
+        display: none;
+    }
+    .uc-box .name {
+        font-size: 20px; font-weight: 600;
+        color: #fff; margin-bottom: 20px;
+    }
+    .uc-box .actions {
+        display: flex; flex-direction: column;
+        gap: 8px;
+    }
+    .uc-box .actions button {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        font-size: 14px; cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+    .uc-box .actions button:hover { background: rgba(255,255,255,0.06); }
+    .uc-box .actions .logout { color: #ff6b6b; border-color: rgba(231,76,60,0.3); }
+    .uc-box .actions .admin-btn { color: var(--primary); border-color: rgba(136,136,136,0.4); }
+    #uc-edit-area {
+        margin: 14px 0;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+    }
+    #uc-edit-area input {
+        padding: 8px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text);
+        font-size: 14px; outline: none;
+        width: 80%;
+        font-family: 'Inter', sans-serif;
+        text-align: center;
+    }
+    #uc-edit-area input:focus { border-color: rgba(255,255,255,0.2); }
+    #uc-edit-area label {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        background: rgba(255,255,255,0.04);
+        padding: 4px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    #uc-edit-area button {
+        padding: 8px 20px;
+        background: var(--primary); color: #fff;
+        border: none; border-radius: 8px;
+        cursor: pointer; font-size: 13px;
+        font-weight: 500;
+    }
+    #uc-edit-area button:hover { background: #999; }
+
+    #auth-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%; max-width: 380px;
+        text-align: center;
+    }
+    #auth-box h3 {
+        color: #fff; font-size: 20px;
+        font-weight: 600; margin-bottom: 20px;
+    }
+    #auth-box .input {
+        width: 100%; margin-bottom: 12px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+    #auth-box .input:focus { border-color: rgba(255,255,255,0.2); }
+    #auth-box .btn-submit {
+        width: 100%; padding: 12px;
+        background: var(--primary); color: #fff;
+        border: none; border-radius: 10px;
+        font-size: 14px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    #auth-box .btn-submit:hover { background: #999; }
+    #auth-box .switch {
+        margin-top: 14px; font-size: 13px;
+        color: var(--text-tertiary);
+        cursor: pointer;
+    }
+    #auth-box .switch span { color: var(--primary); }
+    #auth-box .close {
+        margin-top: 12px;
+        color: var(--text-tertiary);
+        font-size: 12px;
+        cursor: pointer; display: block;
+    }
+    .avatar-upload-area {
+        margin: 12px 0;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+    }
+    .avatar-upload-area img {
+        width: 56px; height: 56px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: rgba(255,255,255,0.06);
+        display: none;
+        border: 1px solid var(--border);
+    }
+    .avatar-upload-area label {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        cursor: pointer;
+        background: rgba(255,255,255,0.04);
+        padding: 4px 14px;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+    }
+    .loading-spinner {
+        display: inline-block;
+        width: 14px; height: 14px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.7s linear infinite;
+        vertical-align: middle;
+        margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn.loading { pointer-events: none; opacity: 0.7; }
+
+    .admin-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 28px;
+        width: 100%; max-width: 520px;
+        max-height: 80vh; overflow-y: auto;
+    }
+    .admin-box h3 {
+        color: #fff; font-size: 18px;
+        font-weight: 600; margin-bottom: 18px;
+        text-align: center;
+    }
+    .admin-section-title {
+        font-size: 13px; font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+    }
+    .admin-box .app-item {
+        display: flex; justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .admin-box .app-item .app-info {
+        display: flex; gap: 12px;
+        align-items: center; flex-wrap: wrap;
+    }
+    .admin-box .app-actions button {
+        padding: 4px 12px;
+        border-radius: 6px; border: none;
+        font-size: 12px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        margin-left: 6px;
+    }
+    .approve-btn { background: #4caf50; color: #fff; }
+    .approve-btn:hover { background: #388e3c; }
+    .reject-btn { background: #e74c3c; color: #fff; }
+    .reject-btn:hover { background: #c0392b; }
+    .admin-box .user-item {
+        display: flex; justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+        gap: 10px; flex-wrap: wrap;
+    }
+    .admin-box .user-item .uname {
+        font-weight: 500; color: var(--text);
+        font-size: 14px;
+    }
+    .admin-box .user-item .urole {
+        font-size: 11px;
+        color: var(--text-tertiary);
+        padding: 2px 10px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.06);
+        margin-left: 8px;
+    }
+    .admin-box .user-item .urole.admin {
+        color: var(--primary);
+        background: rgba(136,136,136,0.15);
+    }
+    .admin-box .user-item .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+    .admin-box .user-item .actions button {
+        padding: 4px 12px;
+        border-radius: 6px; border: none;
+        font-size: 12px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .btn-set-admin { background: var(--primary); color: #fff; }
+    .btn-set-admin:hover { background: #999; }
+    .btn-set-user { background: rgba(255,255,255,0.1); color: var(--text); }
+    .btn-set-user:hover { background: rgba(255,255,255,0.15); }
+    .btn-delete { background: #e74c3c; color: #fff; }
+    .btn-delete:hover { background: #c0392b; }
+    .close-admin {
+        display: block; margin-top: 18px;
+        text-align: center;
+        color: var(--text-tertiary);
+        font-size: 13px; cursor: pointer;
+    }
+    .close-admin:hover { color: var(--text-secondary); }
+
+    @media (max-width: 768px) {
+        .navbar { top: 14px; left: 14px; right: 14px; gap: 8px; }
+        .navbar .nav-item { height: 38px; padding: 0 12px; font-size: 12px; }
+        .navbar .nav-item.avatar { width: 38px; }
+        .navbar .nav-item.cmd-btn { width: 38px; }
+        .navbar .nav-item.chat-btn { padding: 0 14px; }
+        .navbar .lang-select { height: 38px; font-size: 12px; padding: 0 28px 0 12px; background-position: right 10px center; }
+        .hero-bg { height: 70vh; }
+        .page { padding: 180px 18px 60px; }
+        .hero-title { font-size: clamp(56px, 18vw, 90px); letter-spacing: -2px; }
+        .hero-sub { font-size: 13px; letter-spacing: 2px; margin-bottom: 48px; }
+        .card { padding: 22px 22px; }
+        .card-title { font-size: 19px; }
+        .card-desc { font-size: 12px; }
+        .card-arrow { font-size: 20px; }
+        .modal-box { padding: 24px 20px; }
+        .cmd-window { width: 94%; max-width: 440px; }
+        .cmd-body { padding: 16px; }
+        .cmd-input { font-size: 15px; padding: 11px 14px; }
+        .cmd-output { font-size: 13px; padding: 12px 14px; }
+    }
+    @media (max-width: 480px) {
+        .navbar { top: 12px; left: 12px; right: 12px; gap: 6px; }
+        .navbar .nav-item { height: 36px; padding: 0 10px; font-size: 11px; }
+        .navbar .nav-item.avatar { width: 36px; font-size: 13px; }
+        .navbar .nav-item.cmd-btn { width: 36px; font-size: 13px; }
+        .navbar .nav-item.chat-btn { padding: 0 12px; }
+        .navbar .lang-select { height: 36px; font-size: 11px; padding: 0 24px 0 10px; background-position: right 8px center; }
+        .hero-bg { height: 65vh; }
+        .page { padding: 160px 14px 50px; }
+        .hero-title { font-size: clamp(52px, 20vw, 80px); }
+        .hero-sub { font-size: 12px; margin-bottom: 40px; }
+        .card { padding: 20px 18px; }
+        .card-title { font-size: 18px; }
+        .card-desc { font-size: 12px; }
+        .card-arrow { font-size: 18px; margin-left: 12px; }
+    }
+</style>
+</head>
+<body>
+
+<div class="hero-bg"></div>
+<canvas id="particles"></canvas>
+
+<div id="toast-container"></div>
+
+<nav class="navbar">
+    <div class="nav-group">
+        <button class="nav-item avatar" id="nav-avatar-btn" onclick="openUserCenter()" title="用户中心">
+            <span id="avatar-text">👤</span>
+            <img id="avatar-img" style="display:none;" alt="avatar">
+        </button>
+        <span class="nav-item" id="nav-user" onclick="openUserCenter()" data-i18n="nav_login" style="display:none;">登录</span>
+        <button class="nav-item cmd-btn" onclick="openCmd()" title="控制台">›_</button>
+        <select class="lang-select" id="lang-select" onchange="switchLang(this.value)">
+            <option value="zh-CN">简体</option>
+            <option value="zh-TW">繁體</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+    <div class="nav-group">
+        <button class="nav-item chat-btn" onclick="openChat()" data-i18n="nav_chat">💬 聊天</button>
+    </div>
+</nav>
+
+<main class="page">
+    <h1 class="hero-title">APE</h1>
+    <p class="hero-sub">ApplePoleEquity</p>
+
+    <div class="cards">
+        <div class="card" id="notice-card" onclick="handleNoticeClick()">
+            <div class="card-info">
+                <div class="card-title" id="notice-title">📢 公告</div>
+                <div class="card-desc" id="notice-desc">暂无公告</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </div>
+
+        <div class="card" onclick="openChat()">
+            <div class="card-info">
+                <div class="card-title" data-i18n="card_chat_title">聊天</div>
+                <div class="card-desc" data-i18n="card_chat_desc">与社区成员实时交流</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </div>
+
+        <a class="card" href="book.html">
+            <div class="card-info">
+                <div class="card-title" data-i18n="card_book_title">藏书阁</div>
+                <div class="card-desc" data-i18n="card_book_desc">阅读社区成员创作的故事与记录</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="xw.html">
+            <div class="card-info">
+                <div class="card-title" data-i18n="card_news_title">新闻</div>
+                <div class="card-desc" data-i18n="card_news_desc">查看社区最新动态与公告</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="https://mc.igng.net/" target="_blank" rel="noopener">
+            <div class="card-info">
+                <div class="card-title" data-i18n="card_igng_title">IGNG 服务器</div>
+                <div class="card-desc" data-i18n="card_igng_desc">访问服务器官方网站</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <a class="card" href="https://qm.qq.com/q/arn6UUVLOg" target="_blank" rel="noopener">
+            <div class="card-info">
+                <div class="card-title" data-i18n="card_qq_title">QQ 群</div>
+                <div class="card-desc" data-i18n="card_qq_desc">加入社区群聊</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </a>
+
+        <div class="card" onclick="openJoinModal()">
+            <div class="card-info">
+                <div class="card-title" data-i18n="card_join_title">如何加入</div>
+                <div class="card-desc" data-i18n="card_join_desc">了解加入 APE 的方式</div>
+            </div>
+            <div class="card-arrow">→</div>
+        </div>
+    </div>
+</main>
+
+<!-- 公告编辑弹窗（管理员） -->
+<div class="modal-overlay" id="notice-edit-modal" onclick="if(event.target===this) closeNoticeEdit()">
+    <div class="modal-box">
+        <h3 data-i18n="notice_edit_title">编辑公告</h3>
+        <div class="modal-desc" data-i18n="notice_edit_desc">填写标题和内容，保存后首页公告卡片会变黄色</div>
+        <div class="modal-field">
+            <label data-i18n="notice_field_title">标题</label>
+            <input type="text" id="notice-input-title" maxlength="50" placeholder="例如：服务器维护通知">
+        </div>
+        <div class="modal-field">
+            <label data-i18n="notice_field_content">内容</label>
+            <textarea id="notice-input-content" maxlength="500" placeholder="公告正文..."></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="danger-btn" onclick="clearNotice()" data-i18n="notice_clear">清除公告</button>
+            <button class="cancel-btn" onclick="closeNoticeEdit()" data-i18n="cancel">取消</button>
+            <button class="save-btn" onclick="saveNotice()" data-i18n="save">保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- 公告查看弹窗（普通用户） -->
+<div class="modal-overlay" id="notice-view-modal" onclick="if(event.target===this) closeNoticeView()">
+    <div class="modal-box">
+        <h3 id="notice-view-title">公告</h3>
+        <div class="modal-desc" id="notice-view-content" style="white-space:pre-wrap;margin-bottom:8px;color:var(--text);font-size:14px;line-height:1.8;"></div>
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeNoticeView()" data-i18n="close">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 如何加入弹窗 -->
+<div class="modal-overlay join-modal" id="join-modal" onclick="if(event.target===this) closeJoinModal()">
+    <div class="modal-box">
+        <h3 data-i18n="join_title">如何加入 APE</h3>
+        <div class="modal-desc" data-i18n="join_desc">选择一种方式加入我们</div>
+
+        <div class="join-option">
+            <div class="opt-title" data-i18n="join_opt1_title">① QQ 审核</div>
+            <div class="opt-desc" data-i18n="join_opt1_desc">点击下方按钮，加入 QQ 群进行审核</div>
+            <button class="opt-btn primary" onclick="window.open('https://qm.qq.com/q/arn6UUVLOg', '_blank')" data-i18n="join_opt1_btn">加入 QQ 群</button>
+        </div>
+
+        <div class="join-option">
+            <div class="opt-title" data-i18n="join_opt2_title">② 服内联系</div>
+            <div class="opt-desc" data-i18n="join_opt2_desc">服务器内联系管理员，不过靠运气看我们在不在</div>
+            <button class="opt-btn" onclick="alert('服务器内联系 ovo，不过靠运气看我们在不在')" data-i18n="join_opt2_btn">了解详情</button>
+        </div>
+
+        <div class="join-option">
+            <div class="opt-title" data-i18n="join_opt3_title">③ 网站发送申请</div>
+            <div class="opt-desc" id="join-login-hint" data-i18n="join_opt3_desc">填写你的游戏 ID，我们会尽快处理</div>
+            <div class="input-group" id="join-input-group">
+                <input id="apply-game-id" placeholder="输入游戏 ID" maxlength="30" data-i18n-ph="join_input_ph">
+                <button class="opt-btn primary" id="apply-submit-btn" onclick="submitApplication()" data-i18n="join_opt3_btn">申请加入</button>
+            </div>
+            <div id="apply-feedback" style="margin-top:8px; font-size:13px; color:var(--text-secondary);"></div>
+        </div>
+
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeJoinModal()" data-i18n="close">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 终端 -->
+<div class="cmd-window" id="cmd-window">
+    <div class="cmd-header" id="cmd-header">
+        <span class="cmd-title">[ APE 终端 ]</span>
+        <button class="cmd-close-btn" onclick="closeCmd()">✕</button>
+    </div>
+    <div class="cmd-body">
+        <div class="cmd-row">
+            <input class="cmd-input" id="cmd-input" placeholder="输入命令..." autocomplete="off" spellcheck="false">
+            <button class="cmd-send" onclick="sendCmd()">↵</button>
+        </div>
+        <div id="color-picker">
+            <div class="slider-group">
+                <div class="slider-row"><label>H</label><input type="range" id="hue" min="0" max="360" value="0"></div>
+                <div class="slider-row"><label>S</label><input type="range" id="sat" min="0" max="100" value="0"></div>
+                <div class="slider-row"><label>B</label><input type="range" id="bri" min="0" max="100" value="53"></div>
+            </div>
+            <div class="preview-row">
+                <div class="preview-color" id="color-preview"></div>
+                <span id="hex-display">#888888</span>
+            </div>
+            <button class="apply-color-btn" onclick="applyColor()" data-i18n="apply_color">应用颜色</button>
+        </div>
+        <div class="cmd-output" id="cmd-output"></div>
+    </div>
+</div>
+
+<!-- 用户中心 -->
+<div class="overlay" id="uc-overlay" onclick="if(event.target===this) closeUserCenter()">
+    <div class="uc-box">
+        <img id="uc-avatar" class="avatar" src="" alt="avatar">
+        <div id="uc-edit-area">
+            <input id="uc-edit-name" placeholder="修改用户名" data-i18n-ph="uc_edit_name_ph">
+            <label for="uc-edit-avatar" data-i18n="uc_change_avatar">更换头像</label>
+            <input type="file" id="uc-edit-avatar" accept="image/*" style="display:none;" onchange="handleUCAvatar(event)">
+            <button onclick="saveUCProfile()" data-i18n="save">保存</button>
+        </div>
+        <div class="name" id="uc-name" data-i18n="uc_not_login">未登录</div>
+        <div class="actions">
+            <button onclick="closeUserCenter()" data-i18n="back">返回</button>
+            <button class="admin-btn" id="uc-admin-btn" onclick="openAdminPanel()" style="display:none;" data-i18n="uc_admin">管理</button>
+            <button class="logout" onclick="logoutUser()" data-i18n="uc_logout">登出</button>
+        </div>
+    </div>
+</div>
+
+<!-- 登录/注册 -->
+<div class="overlay" id="auth-overlay" onclick="if(event.target===this) closeAuth()">
+    <div id="auth-box">
+        <h3 id="auth-title" data-i18n="auth_register_title">注册 APE</h3>
+        <input id="auth-username" class="input" placeholder="用户名" autocomplete="username" data-i18n-ph="auth_username_ph">
+        <input id="auth-password" class="input" type="password" placeholder="密码" autocomplete="current-password" data-i18n-ph="auth_password_ph">
+        <div class="avatar-upload-area">
+            <img id="auth-avatar-preview">
+            <label for="auth-avatar-input" data-i18n="auth_choose_avatar">选择头像</label>
+            <input type="file" id="auth-avatar-input" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
+        </div>
+        <button id="auth-btn" class="btn-submit" onclick="handleAuth()" data-i18n="auth_register_btn">注册</button>
+        <div class="switch" onclick="toggleAuthMode()" id="auth-switch" data-i18n="auth_has_account">已有账号？ <span>去登录</span></div>
+        <div class="close" onclick="closeAuth()" data-i18n="close">关闭</div>
+    </div>
+</div>
+
+<!-- 管理面板 -->
+<div class="overlay" id="admin-overlay" onclick="if(event.target===this) closeAdminPanel()">
+    <div class="admin-box">
+        <h3 data-i18n="admin_title">管理面板</h3>
+        <div style="margin-bottom:20px;">
+            <div class="admin-section-title" data-i18n="admin_applications">📩 加入申请</div>
+            <div id="admin-applications"></div>
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:16px;">
+            <div class="admin-section-title" data-i18n="admin_users">👤 用户管理</div>
+            <div id="admin-user-list"></div>
+        </div>
+        <div class="close-admin" onclick="closeAdminPanel()" data-i18n="close">关闭</div>
+    </div>
+</div>
+
+<script>
+let SB = null;
+
+async function initSB() {
+    const res = await fetch('key.json');
+    const cfg = await res.json();
+    SB = supabase.createClient(cfg.supabase_url, cfg.supabase_key);
+}
+
+const state = {
+    user: localStorage.getItem('ape_user') || null,
+    avatar: localStorage.getItem('ape_avatar') || null,
+    role: localStorage.getItem('ape_role') || 'user',
+    theme: localStorage.getItem('ape_theme') || '#888',
+    isLogin: false,
+    lang: localStorage.getItem('ape_lang') || 'zh-CN',
+    notice: { enabled: false, title: '', content: '' }
+};
+
+const ADMIN_USER = 'Aplefox';
+
+const LANG_DATA = {
+    'zh-CN': {
+        nav_login: '登录',
+        nav_chat: '💬 聊天',
+        card_chat_title: '聊天',
+        card_chat_desc: '与社区成员实时交流',
+        card_book_title: '藏书阁',
+        card_book_desc: '阅读社区成员创作的故事与记录',
+        card_news_title: '新闻',
+        card_news_desc: '查看社区最新动态与公告',
+        card_igng_title: 'IGNG 服务器',
+        card_igng_desc: '访问服务器官方网站',
+        card_qq_title: 'QQ 群',
+        card_qq_desc: '加入社区群聊',
+        card_join_title: '如何加入',
+        card_join_desc: '了解加入 APE 的方式',
+        notice_edit_title: '编辑公告',
+        notice_edit_desc: '填写标题和内容，保存后首页公告卡片会变黄色',
+        notice_field_title: '标题',
+        notice_field_content: '内容',
+        notice_clear: '清除公告',
+        notice_view_title: '公告',
+        join_title: '如何加入 APE',
+        join_desc: '选择一种方式加入我们',
+        join_opt1_title: '① QQ 审核',
+        join_opt1_desc: '点击下方按钮，加入 QQ 群进行审核',
+        join_opt1_btn: '加入 QQ 群',
+        join_opt2_title: '② 服内联系',
+        join_opt2_desc: '服务器内联系管理员，不过靠运气看我们在不在',
+        join_opt2_btn: '了解详情',
+        join_opt3_title: '③ 网站发送申请',
+        join_opt3_desc: '填写你的游戏 ID，我们会尽快处理',
+        join_opt3_btn: '申请加入',
+        join_input_ph: '输入游戏 ID',
+        join_need_login: '请先登录再申请加入',
+        apply_processing: '处理中...',
+        apply_success: '我们会尽快处理',
+        apply_fail: '提交失败，请重试',
+        auth_login_title: '登录 APE',
+        auth_register_title: '注册 APE',
+        auth_username_ph: '用户名',
+        auth_password_ph: '密码',
+        auth_choose_avatar: '选择头像',
+        auth_login_btn: '登录',
+        auth_register_btn: '注册',
+        auth_no_account: '没有账号？ <span>去注册</span>',
+        auth_has_account: '已有账号？ <span>去登录</span>',
+        uc_not_login: '未登录',
+        uc_admin: '管理',
+        uc_logout: '登出',
+        uc_edit_name_ph: '修改用户名',
+        uc_change_avatar: '更换头像',
+        admin_title: '管理面板',
+        admin_applications: '📩 加入申请',
+        admin_users: '👤 用户管理',
+        apply_color: '应用颜色',
+        save: '保存',
+        cancel: '取消',
+        close: '关闭',
+        back: '返回'
+    },
+    'zh-TW': {
+        nav_login: '登入',
+        nav_chat: '💬 聊天',
+        card_chat_title: '聊天',
+        card_chat_desc: '與社區成員即時交流',
+        card_book_title: '藏書閣',
+        card_book_desc: '閱讀社區成員創作的故事與記錄',
+        card_news_title: '新聞',
+        card_news_desc: '查看社區最新動態與公告',
+        card_igng_title: 'IGNG 伺服器',
+        card_igng_desc: '訪問伺服器官方網站',
+        card_qq_title: 'QQ 群',
+        card_qq_desc: '加入社區群聊',
+        card_join_title: '如何加入',
+        card_join_desc: '了解加入 APE 的方式',
+        notice_edit_title: '編輯公告',
+        notice_edit_desc: '填寫標題和內容，儲存後首頁公告卡片會變黃色',
+        notice_field_title: '標題',
+        notice_field_content: '內容',
+        notice_clear: '清除公告',
+        notice_view_title: '公告',
+        join_title: '如何加入 APE',
+        join_desc: '選擇一種方式加入我們',
+        join_opt1_title: '① QQ 審核',
+        join_opt1_desc: '點擊下方按鈕，加入 QQ 群進行審核',
+        join_opt1_btn: '加入 QQ 群',
+        join_opt2_title: '② 服內聯繫',
+        join_opt2_desc: '伺服器內聯繫管理員，不過靠運氣看我們在不在',
+        join_opt2_btn: '了解詳情',
+        join_opt3_title: '③ 網站發送申請',
+        join_opt3_desc: '填寫你的遊戲 ID，我們會盡快處理',
+        join_opt3_btn: '申請加入',
+        join_input_ph: '輸入遊戲 ID',
+        join_need_login: '請先登入再申請加入',
+        apply_processing: '處理中...',
+        apply_success: '我們會盡快處理',
+        apply_fail: '提交失敗，請重試',
+        auth_login_title: '登入 APE',
+        auth_register_title: '註冊 APE',
+        auth_username_ph: '使用者名稱',
+        auth_password_ph: '密碼',
+        auth_choose_avatar: '選擇頭像',
+        auth_login_btn: '登入',
+        auth_register_btn: '註冊',
+        auth_no_account: '沒有帳號？ <span>去註冊</span>',
+        auth_has_account: '已有帳號？ <span>去登入</span>',
+        uc_not_login: '未登入',
+        uc_admin: '管理',
+        uc_logout: '登出',
+        uc_edit_name_ph: '修改使用者名稱',
+        uc_change_avatar: '更換頭像',
+        admin_title: '管理面板',
+        admin_applications: '📩 加入申請',
+        admin_users: '👤 使用者管理',
+        apply_color: '套用顏色',
+        save: '儲存',
+        cancel: '取消',
+        close: '關閉',
+        back: '返回'
+    },
+    'en': {
+        nav_login: 'Login',
+        nav_chat: '💬 Chat',
+        card_chat_title: 'Chat',
+        card_chat_desc: 'Chat with community members in real time',
+        card_book_title: 'Library',
+        card_book_desc: 'Read stories and records from community members',
+        card_news_title: 'News',
+        card_news_desc: 'Check the latest updates and announcements',
+        card_igng_title: 'IGNG Server',
+        card_igng_desc: 'Visit the official server website',
+        card_qq_title: 'QQ Group',
+        card_qq_desc: 'Join the community chat',
+        card_join_title: 'How to Join',
+        card_join_desc: 'Learn how to join APE',
+        notice_edit_title: 'Edit Notice',
+        notice_edit_desc: 'Fill in title and content. The notice card turns yellow when saved.',
+        notice_field_title: 'Title',
+        notice_field_content: 'Content',
+        notice_clear: 'Clear Notice',
+        notice_view_title: 'Notice',
+        join_title: 'How to Join APE',
+        join_desc: 'Choose a way to join us',
+        join_opt1_title: '① QQ Review',
+        join_opt1_desc: 'Click below to join the QQ group for review',
+        join_opt1_btn: 'Join QQ Group',
+        join_opt2_title: '② In-server Contact',
+        join_opt2_desc: 'Contact admins in the server — depends on luck',
+        join_opt2_btn: 'Learn More',
+        join_opt3_title: '③ Website Application',
+        join_opt3_desc: 'Fill in your game ID, we will process it soon',
+        join_opt3_btn: 'Apply',
+        join_input_ph: 'Enter game ID',
+        join_need_login: 'Please login first',
+        apply_processing: 'Processing...',
+        apply_success: 'We will process it soon',
+        apply_fail: 'Submission failed, please retry',
+        auth_login_title: 'Login to APE',
+        auth_register_title: 'Register for APE',
+        auth_username_ph: 'Username',
+        auth_password_ph: 'Password',
+        auth_choose_avatar: 'Choose Avatar',
+        auth_login_btn: 'Login',
+        auth_register_btn: 'Register',
+        auth_no_account: 'No account? <span>Register</span>',
+        auth_has_account: 'Have an account? <span>Login</span>',
+        uc_not_login: 'Not logged in',
+        uc_admin: 'Admin',
+        uc_logout: 'Logout',
+        uc_edit_name_ph: 'New username',
+        uc_change_avatar: 'Change Avatar',
+        admin_title: 'Admin Panel',
+        admin_applications: '📩 Applications',
+        admin_users: '👤 Users',
+        apply_color: 'Apply Color',
+        save: 'Save',
+        cancel: 'Cancel',
+        close: 'Close',
+        back: 'Back'
+    }
+};
+
+function t(key) {
+    return LANG_DATA[state.lang]?.[key] || LANG_DATA['zh-CN'][key] || key;
+}
+
+function applyLang() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (!key) return;
+        const val = t(key);
+        if (val.includes('<span>')) el.innerHTML = val;
+        else el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        if (key) el.placeholder = t(key);
+    });
+    updateAuthUI();
+    const sel = document.getElementById('lang-select');
+    if (sel) sel.value = state.lang;
+    updateAvatarUI();
+    updateJoinForm();
+}
+
+function switchLang(val) {
+    state.lang = val;
+    localStorage.setItem('ape_lang', val);
+    applyLang();
+    if (document.getElementById('admin-overlay').classList.contains('active')) {
+        loadApplications();
+        loadUserList();
+    }
+    renderNotice();
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast-item ' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.animation = 'toastOut 0.2s ease forwards';
+        setTimeout(() => el.remove(), 200);
+    }, 2000);
+}
+
+function applyTheme() {
+    document.documentElement.style.setProperty('--primary', state.theme);
+}
+applyTheme();
+
+function setThemeColor(color) {
+    state.theme = color;
+    localStorage.setItem('ape_theme', color);
+    applyTheme();
+    showToast('主题色已更新', 'success');
+}
+
+function isAdmin() {
+    return state.user === ADMIN_USER || state.role === 'admin';
+}
+
+function updateAvatarUI() {
+    const avatarBtn = document.getElementById('nav-avatar-btn');
+    const textEl = document.getElementById('avatar-text');
+    const imgEl = document.getElementById('avatar-img');
+    const userEl = document.getElementById('nav-user');
+    if (state.user && state.avatar) {
+        avatarBtn.style.display = 'flex';
+        imgEl.src = state.avatar;
+        imgEl.style.display = 'block';
+        textEl.style.display = 'none';
+        userEl.style.display = 'flex';
+        userEl.textContent = state.user;
+    } else if (state.user) {
+        avatarBtn.style.display = 'flex';
+        textEl.style.display = 'block';
+        textEl.textContent = state.user.charAt(0).toUpperCase();
+        imgEl.style.display = 'none';
+        userEl.style.display = 'flex';
+        userEl.textContent = state.user;
+    } else {
+        avatarBtn.style.display = 'flex';
+        textEl.style.display = 'block';
+        textEl.textContent = '👤';
+        imgEl.style.display = 'none';
+        userEl.style.display = 'none';
+    }
+}
+
+function updateUI() {
+    const adminBtn = document.getElementById('uc-admin-btn');
+    if (state.user && isAdmin()) adminBtn.style.display = 'block';
+    else adminBtn.style.display = 'none';
+    updateAvatarUI();
+    updateJoinForm();
+}
+
+/* ===== 公告 ===== */
+async function loadNotice() {
+    try {
+        const { data, error } = await SB.from('site_config')
+            .select('config_key, config_value')
+            .in('config_key', ['home_notice_enabled', 'home_notice_title', 'home_notice_content']);
+        if (error) throw error;
+        const map = {};
+        (data || []).forEach(d => { map[d.config_key] = d.config_value; });
+        state.notice = {
+            enabled: map['home_notice_enabled'] === '1',
+            title: map['home_notice_title'] || '',
+            content: map['home_notice_content'] || ''
+        };
+        renderNotice();
+    } catch (e) {
+        console.warn('加载公告失败', e);
+    }
+}
+
+function renderNotice() {
+    const card = document.getElementById('notice-card');
+    const titleEl = document.getElementById('notice-title');
+    const descEl = document.getElementById('notice-desc');
+    const hasNotice = state.notice.enabled && (state.notice.title || state.notice.content);
+    if (hasNotice) {
+        card.classList.add('notice-active');
+        titleEl.textContent = '📢 ' + (state.notice.title || '公告');
+        descEl.textContent = state.notice.content || '';
+    } else {
+        card.classList.remove('notice-active');
+        titleEl.textContent = '📢 公告';
+        descEl.textContent = isAdmin() ? '点击撰写公告' : '暂无公告';
+    }
+}
+
+function handleNoticeClick() {
+    const hasNotice = state.notice.enabled && (state.notice.title || state.notice.content);
+    if (isAdmin()) {
+        openNoticeEdit();
+    } else {
+        if (hasNotice) openNoticeView();
+    }
+}
+
+function openNoticeEdit() {
+    document.getElementById('notice-input-title').value = state.notice.title || '';
+    document.getElementById('notice-input-content').value = state.notice.content || '';
+    document.getElementById('notice-edit-modal').classList.add('active');
+    document.getElementById('notice-edit-modal').classList.remove('closing');
+}
+function closeNoticeEdit() {
+    const overlay = document.getElementById('notice-edit-modal');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+async function saveNotice() {
+    const title = document.getElementById('notice-input-title').value.trim();
+    const content = document.getElementById('notice-input-content').value.trim();
+    if (!title && !content) {
+        showToast('标题和内容不能都为空', 'error');
+        return;
+    }
+    const { data, error } = await SB.rpc('admin_save_notice', {
+        operator: state.user,
+        p_enabled: '1',
+        p_title: title,
+        p_content: content
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '保存失败', 'error');
+        return;
+    }
+    showToast('公告已保存', 'success');
+    closeNoticeEdit();
+    await loadNotice();
+}
+
+async function clearNotice() {
+    if (!confirm('确认清除公告？')) return;
+    const { data, error } = await SB.rpc('admin_clear_notice', { operator: state.user });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '清除失败', 'error');
+        return;
+    }
+    showToast('公告已清除', 'success');
+    closeNoticeEdit();
+    await loadNotice();
+}
+
+function openNoticeView() {
+    document.getElementById('notice-view-title').textContent = '📢 ' + (state.notice.title || '公告');
+    document.getElementById('notice-view-content').textContent = state.notice.content || '';
+    document.getElementById('notice-view-modal').classList.add('active');
+    document.getElementById('notice-view-modal').classList.remove('closing');
+}
+function closeNoticeView() {
+    const overlay = document.getElementById('notice-view-modal');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+/* ===== 聊天 ===== */
+function openChat() {
+    window.open('chat.html', '_blank');
+}
+
+/* ===== 加入表单逻辑 ===== */
+function updateJoinForm() {
+    const hint = document.getElementById('join-login-hint');
+    const group = document.getElementById('join-input-group');
+    if (!hint || !group) return;
+    if (state.user) {
+        hint.textContent = t('join_opt3_desc');
+        group.style.display = 'flex';
+    } else {
+        hint.textContent = t('join_need_login');
+        group.style.display = 'none';
+    }
+}
+
+function openJoinModal() {
+    document.getElementById('join-modal').classList.add('active');
+    document.getElementById('join-modal').classList.remove('closing');
+    document.getElementById('apply-game-id').value = '';
+    document.getElementById('apply-feedback').textContent = '';
+    updateJoinForm();
+    if (!state.user) {
+        setTimeout(() => {
+            closeJoinModal();
+            openAuth();
+        }, 400);
+        return;
+    }
+}
+function closeJoinModal() {
+    const overlay = document.getElementById('join-modal');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+async function submitApplication() {
+    if (!state.user) {
+        showToast(t('join_need_login'), 'error');
+        closeJoinModal();
+        openAuth();
+        return;
+    }
+    const input = document.getElementById('apply-game-id');
+    const gameId = input.value.trim();
+    if (!gameId) { showToast('请输入游戏 ID', 'error'); return; }
+    const btn = document.getElementById('apply-submit-btn');
+    const feedback = document.getElementById('apply-feedback');
+    btn.disabled = true;
+    btn.textContent = t('apply_processing');
+    feedback.textContent = '';
+    try {
+        const { error } = await SB.from('applications').insert({
+            game_id: gameId,
+            username: state.user,
+            status: 'pending'
+        });
+        if (error) throw error;
+        feedback.innerHTML = `<span style="color:#69db7c;">✅ ${t('apply_success')}</span>`;
+        showToast(t('apply_success'), 'success');
+        input.value = '';
+    } catch (err) {
+        feedback.innerHTML = `<span style="color:#ff6b6b;">❌ ${t('apply_fail')}</span>`;
+        showToast(t('apply_fail'), 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = t('join_opt3_btn');
+    }
+}
+
+/* ===== 用户中心 ===== */
+function openUserCenter() {
+    if (!state.user) { openAuth(); return; }
+    const img = document.getElementById('uc-avatar');
+    if (state.avatar && state.avatar.trim()) {
+        img.src = state.avatar;
+        img.style.display = 'block';
+    } else img.style.display = 'none';
+    document.getElementById('uc-name').textContent = state.user;
+    document.getElementById('uc-edit-name').value = '';
+    document.getElementById('uc-overlay').classList.add('active');
+    document.getElementById('uc-overlay').classList.remove('closing');
+}
+function closeUserCenter() {
+    const overlay = document.getElementById('uc-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+let tempUcAvatarFile = null;
+function handleUCAvatar(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    tempUcAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = document.getElementById('uc-avatar');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function saveUCProfile() {
+    if (!state.user) return;
+    const newName = document.getElementById('uc-edit-name').value.trim();
+    let newAvatarUrl = state.avatar;
+    if (tempUcAvatarFile) {
+        const fileName = Date.now() + '_' + tempUcAvatarFile.name;
+        const { error: uploadErr } = await SB.storage.from('avatars').upload(fileName, tempUcAvatarFile);
+        if (!uploadErr) {
+            const { data: urlData } = SB.storage.from('avatars').getPublicUrl(fileName);
+            newAvatarUrl = urlData.publicUrl;
+        } else showToast('头像上传失败', 'error');
+    }
+    if (newName && newName !== state.user) {
+        const { data: check } = await SB.from('users').select('username').eq('username', newName);
+        if (check && check.length > 0) { showToast('用户名已被注册', 'error'); return; }
+        const { error: updateErr } = await SB.from('users').update({ username: newName }).eq('username', state.user);
+        if (updateErr) { showToast('修改失败', 'error'); return; }
+        state.user = newName;
+        localStorage.setItem('ape_user', newName);
+    }
+    if (newAvatarUrl && newAvatarUrl !== state.avatar) {
+        const { error: updateErr } = await SB.from('users').update({ avatar_url: newAvatarUrl }).eq('username', state.user);
+        if (!updateErr) {
+            state.avatar = newAvatarUrl;
+            localStorage.setItem('ape_avatar', newAvatarUrl);
+        }
+    }
+    closeUserCenter();
+    updateUI();
+    showToast('个人信息已更新', 'success');
+}
+
+function logoutUser() {
+    if (!confirm('确认退出登录？')) return;
+    state.user = null; state.avatar = null; state.role = 'user';
+    localStorage.removeItem('ape_user');
+    localStorage.removeItem('ape_avatar');
+    localStorage.removeItem('ape_role');
+    closeUserCenter();
+    updateUI();
+    renderNotice();
+    showToast('已退出登录', 'info');
+}
+
+/* ===== 登录/注册 ===== */
+let tempAvatarFile = null;
+
+function updateAuthUI() {
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-btn');
+    const sw = document.getElementById('auth-switch');
+    if (state.isLogin) {
+        title.textContent = t('auth_login_title');
+        btn.textContent = t('auth_login_btn');
+        sw.innerHTML = t('auth_no_account');
+    } else {
+        title.textContent = t('auth_register_title');
+        btn.textContent = t('auth_register_btn');
+        sw.innerHTML = t('auth_has_account');
+    }
+}
+
+function previewAvatar(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    tempAvatarFile = file;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = document.getElementById('auth-avatar-preview');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function openAuth() {
+    document.getElementById('auth-overlay').classList.add('active');
+    document.getElementById('auth-overlay').classList.remove('closing');
+    document.getElementById('auth-username').value = '';
+    document.getElementById('auth-password').value = '';
+    document.getElementById('auth-avatar-preview').style.display = 'none';
+    document.getElementById('auth-avatar-input').value = '';
+    tempAvatarFile = null;
+    updateAuthUI();
+}
+function closeAuth() {
+    const overlay = document.getElementById('auth-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+function toggleAuthMode() {
+    state.isLogin = !state.isLogin;
+    updateAuthUI();
+}
+
+async function handleAuth() {
+    const btn = document.getElementById('auth-btn');
+    const orig = btn.textContent;
+    btn.innerHTML = '<span class="loading-spinner"></span>处理中...';
+    btn.classList.add('loading');
+    const u = document.getElementById('auth-username').value.trim();
+    const p = document.getElementById('auth-password').value.trim();
+    if (!u || !p) {
+        showToast('用户名和密码不能为空', 'error');
+        btn.textContent = orig; btn.classList.remove('loading');
+        return;
+    }
+    try {
+        const { data: existing } = await SB.from('users').select('*').eq('username', u);
+        if (state.isLogin) {
+            if (!existing || existing.length === 0 || existing[0].password !== p) {
+                showToast('用户名或密码错误', 'error');
+                btn.textContent = orig; btn.classList.remove('loading');
+                return;
+            }
+            state.user = u;
+            state.avatar = existing[0].avatar_url || null;
+            state.role = existing[0].role || 'user';
+            localStorage.setItem('ape_user', u);
+            if (state.avatar) localStorage.setItem('ape_avatar', state.avatar);
+            localStorage.setItem('ape_role', state.role);
+            closeAuth(); updateUI();
+            renderNotice();
+            showToast('欢迎回来，' + u, 'success');
+        } else {
+            if (existing && existing.length > 0) {
+                showToast('用户名已被注册', 'error');
+                btn.textContent = orig; btn.classList.remove('loading');
+                return;
+            }
+            let avatarUrl = null;
+            if (tempAvatarFile) {
+                const fileName = Date.now() + '_' + tempAvatarFile.name;
+                const { error: uploadErr } = await SB.storage.from('avatars').upload(fileName, tempAvatarFile);
+                if (!uploadErr) {
+                    const { data: urlData } = SB.storage.from('avatars').getPublicUrl(fileName);
+                    avatarUrl = urlData.publicUrl;
+                }
+            }
+            const { error: insertErr } = await SB.from('users').insert({
+                username: u, password: p, avatar_url: avatarUrl, level: 1, role: 'user'
+            });
+            if (insertErr) {
+                showToast('注册失败: ' + insertErr.message, 'error');
+                btn.textContent = orig; btn.classList.remove('loading');
+                return;
+            }
+            state.user = u;
+            state.avatar = avatarUrl;
+            state.role = 'user';
+            localStorage.setItem('ape_user', u);
+            if (avatarUrl) localStorage.setItem('ape_avatar', avatarUrl);
+            localStorage.setItem('ape_role', 'user');
+            closeAuth(); updateUI();
+            renderNotice();
+            showToast('欢迎加入，' + u + '！', 'success');
+        }
+    } catch (e) {
+        showToast('操作失败，请重试', 'error');
+    } finally {
+        btn.textContent = orig;
+        btn.classList.remove('loading');
+    }
+}
+
+/* ===== 管理面板 ===== */
+async function openAdminPanel() {
+    if (!isAdmin()) { showToast('无权限', 'error'); return; }
+    document.getElementById('admin-overlay').classList.add('active');
+    document.getElementById('admin-overlay').classList.remove('closing');
+    await loadUserList();
+    await loadApplications();
+}
+function closeAdminPanel() {
+    const overlay = document.getElementById('admin-overlay');
+    overlay.classList.add('closing');
+    setTimeout(() => { overlay.classList.remove('active', 'closing'); }, 150);
+}
+
+async function loadApplications() {
+    const container = document.getElementById('admin-applications');
+    container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0;">加载中...</div>';
+    const { data, error } = await SB.from('applications').select('*').order('created_at', { ascending: false });
+    if (error || !data || data.length === 0) {
+        container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:8px 0;">暂无申请</div>';
+        return;
+    }
+    container.innerHTML = data.map(app => `
+        <div class="app-item">
+            <div class="app-info">
+                <span style="font-weight:500;">${app.game_id}</span>
+                <span style="color:var(--text-tertiary);font-size:12px;">${app.username || '游客'}</span>
+                <span style="font-size:11px;padding:2px 10px;border-radius:10px;background:${app.status === 'pending' ? 'rgba(255,193,7,0.2)' : app.status === 'approved' ? 'rgba(76,175,80,0.2)' : 'rgba(231,76,60,0.2)'}; color:${app.status === 'pending' ? '#ffd43b' : app.status === 'approved' ? '#69db7c' : '#ff6b6b'};">
+                    ${app.status === 'pending' ? '待处理' : app.status === 'approved' ? '已通过' : '已拒绝'}
+                </span>
+            </div>
+            ${app.status === 'pending' ? `
+            <div class="app-actions">
+                <button class="approve-btn" onclick="handleApplication(${app.id}, 'approved')">通过</button>
+                <button class="reject-btn" onclick="handleApplication(${app.id}, 'rejected')">拒绝</button>
+            </div>` : ''}
+        </div>
+    `).join('');
+}
+
+async function handleApplication(id, status) {
+    if (!confirm(`确认将此申请标记为 ${status === 'approved' ? '通过' : '拒绝'} 吗？`)) return;
+    const { data, error } = await SB.rpc('admin_handle_application', {
+        operator: state.user, p_app_id: id, p_status: status
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '操作失败', 'error');
+        return;
+    }
+    showToast(`已${status === 'approved' ? '通过' : '拒绝'}`, 'success');
+    loadApplications();
+}
+
+async function loadUserList() {
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">加载中...</div>';
+    const { data: users, error } = await SB.from('users').select('username, role').order('username');
+    if (error || !users || users.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">暂无用户</div>';
+        return;
+    }
+    list.innerHTML = users.map(u => {
+        const ua = u.role === 'admin' || u.username === ADMIN_USER;
+        const isSelf = u.username === state.user;
+        const isFounder = u.username === ADMIN_USER;
+        let actions = '';
+        const canManage = state.user === ADMIN_USER || state.role === 'admin';
+        if (canManage && !isFounder && u.username !== state.user) {
+            if (u.role === 'admin') {
+                actions += '<button class="btn-set-user" onclick="setUserRole(\'' + u.username + '\',\'user\')">撤销</button>';
+            } else {
+                actions += '<button class="btn-set-admin" onclick="setUserRole(\'' + u.username + '\',\'admin\')">设管理</button>';
+            }
+            actions += '<button class="btn-delete" onclick="deleteUser(\'' + u.username + '\')">删除</button>';
+        }
+        const roleLabel = isFounder ? '创始人' : (ua ? '管理员' : '用户');
+        return '<div class="user-item"><div><span class="uname">' + u.username +
+            '</span><span class="urole ' + (ua ? 'admin' : '') + '">' + roleLabel +
+            '</span>' + (isSelf ? ' <span style="color:var(--text-tertiary);font-size:12px;">(我)</span>' : '') +
+            '</div><div class="actions">' + actions + '</div></div>';
+    }).join('');
+}
+
+async function setUserRole(username, role) {
+    if (!confirm('确认将 ' + username + ' 设为 ' + (role === 'admin' ? '管理员' : '普通用户') + ' 吗？')) return;
+    const { data, error } = await SB.rpc('admin_set_role', {
+        operator: state.user, target: username, new_role: role
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '操作失败', 'error');
+        return;
+    }
+    showToast('已更新 ' + username + ' 的角色', 'success');
+    await loadUserList();
+}
+
+async function deleteUser(username) {
+    if (!confirm('确认删除用户 ' + username + ' 吗？此操作不可恢复！')) return;
+    const { data, error } = await SB.rpc('admin_delete_user', {
+        operator: state.user, target: username
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '删除失败', 'error');
+        return;
+    }
+    showToast('已删除用户 ' + username, 'success');
+    await loadUserList();
+}
+
+/* ===== 终端 ===== */
+let isDragging = false, dragOffsetX = 0, dragOffsetY = 0;
+function openCmd() {
+    const win = document.getElementById('cmd-window');
+    win.classList.add('active');
+    document.getElementById('cmd-input').value = '';
+    document.getElementById('cmd-output').innerHTML = '';
+    document.getElementById('color-picker').classList.remove('active');
+    document.getElementById('cmd-input').focus();
+}
+function closeCmd() {
+    document.getElementById('cmd-window').classList.remove('active');
+}
+const cmdHeaderEl = document.getElementById('cmd-header');
+const cmdWindowEl = document.getElementById('cmd-window');
+cmdHeaderEl.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.cmd-close-btn')) return;
+    isDragging = true;
+    const rect = cmdWindowEl.getBoundingClientRect();
+    dragOffsetX = e.clientX - rect.left;
+    dragOffsetY = e.clientY - rect.top;
+    cmdWindowEl.style.transform = 'none';
+    e.preventDefault();
+});
+document.addEventListener('mousemove', function(e) {
+    if (!isDragging) return;
+    let x = e.clientX - dragOffsetX;
+    let y = e.clientY - dragOffsetY;
+    const maxX = window.innerWidth - 60;
+    const maxY = window.innerHeight - 60;
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+    cmdWindowEl.style.left = x + 'px';
+    cmdWindowEl.style.top = y + 'px';
+});
+document.addEventListener('mouseup', function() { isDragging = false; });
+cmdHeaderEl.addEventListener('touchstart', function(e) {
+    if (e.target.closest('.cmd-close-btn')) return;
+    const touch = e.touches[0];
+    const rect = cmdWindowEl.getBoundingClientRect();
+    dragOffsetX = touch.clientX - rect.left;
+    dragOffsetY = touch.clientY - rect.top;
+    cmdWindowEl.style.transform = 'none';
+    isDragging = true;
+}, { passive: true });
+document.addEventListener('touchmove', function(e) {
+    if (!isDragging) return;
+    const touch = e.touches[0];
+    let x = touch.clientX - dragOffsetX;
+    let y = touch.clientY - dragOffsetY;
+    const maxX = window.innerWidth - 60;
+    const maxY = window.innerHeight - 60;
+    x = Math.max(0, Math.min(x, maxX));
+    y = Math.max(0, Math.min(y, maxY));
+    cmdWindowEl.style.left = x + 'px';
+    cmdWindowEl.style.top = y + 'px';
+}, { passive: true });
+document.addEventListener('touchend', function() { isDragging = false; }, { passive: true });
+
+function sendCmd() {
+    const input = document.getElementById('cmd-input');
+    const cmd = input.value.trim();
+    if (cmd) execCmd(cmd);
+    input.value = '';
+}
+function execCmd(cmd) {
+    const out = document.getElementById('cmd-output');
+    let html = '';
+    if (cmd === '/help') {
+        html = `<span class="info">可用命令:</span><br><span class="hl">/help</span> - 显示此帮助<br><span class="hl">/color</span> - 打开颜色调色器<br><span class="hl">/config</span> - 显示网页与账号信息<br><span class="hl">//cc</span> - 查看本地存储`;
+        out.innerHTML = html; return;
+    }
+    if (cmd === '/color') {
+        document.getElementById('color-picker').classList.toggle('active');
+        document.getElementById('hue').value = 0;
+        document.getElementById('sat').value = 0;
+        document.getElementById('bri').value = 53;
+        updateColorPreview();
+        out.innerHTML = `<span class="info">颜色调色器已打开</span>`;
+        return;
+    }
+    if (cmd === '/config') {
+        const tc = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#888';
+        const ua = navigator.userAgent;
+        let device = '未知设备', os = '未知系统';
+        if (ua.includes('Macintosh')) { device = 'Mac'; os = 'macOS'; }
+        else if (ua.includes('Windows NT')) { device = 'PC'; os = 'Windows'; }
+        else if (ua.includes('iPhone')) { device = 'iPhone'; os = 'iOS'; }
+        else if (ua.includes('Android')) { device = 'Android'; os = 'Android'; }
+        else if (ua.includes('Linux')) { device = 'Linux'; os = 'Linux'; }
+        html = `<span class="info">网页与账号信息</span><br><span class="dim">--------------------------------</span><br>网页: APE 官方主页<br>版本: 4.2<br>当前账号: ${state.user || '未登录'}<br>角色: ${state.user === ADMIN_USER ? '创始人' : (state.role === 'admin' ? '管理员' : '用户')}<br>主题色: ${tc}<br>设备: ${device}<br>系统: ${os}<br>屏幕: ${window.screen.width}x${window.screen.height}<br><span class="dim">--------------------------------</span>`;
+        out.innerHTML = html; return;
+    }
+    if (cmd === '//cc') {
+        const keys = ['ape_theme', 'ape_user', 'ape_avatar', 'ape_role', 'ape_lang'];
+        let r = '本地存储:<br>';
+        keys.forEach(function(k) {
+            var v = localStorage.getItem(k);
+            r += `<span class="dim">${k}:</span> ${v || '(空)'}<br>`;
+        });
+        out.innerHTML = r; return;
+    }
+    out.innerHTML = `<span class="err">未知命令: ${cmd}，输入 /help 查看可用命令</span>`;
+}
+
+function hslToHex(h, s, l) {
+    s /= 100; l /= 100;
+    var c = (1 - Math.abs(2 * l - 1)) * s;
+    var x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    var m = l - c / 2;
+    var r, g, b;
+    if (h < 60) { r = c; g = x; b = 0; }
+    else if (h < 120) { r = x; g = c; b = 0; }
+    else if (h < 180) { r = 0; g = c; b = x; }
+    else if (h < 240) { r = 0; g = x; b = c; }
+    else if (h < 300) { r = x; g = 0; b = c; }
+    else { r = c; g = 0; b = x; }
+    return '#' + [r, g, b].map(function(v) { return Math.round((v + m) * 255).toString(16).padStart(2, '0'); }).join('');
+}
+function updateColorPreview() {
+    var h = parseInt(document.getElementById('hue').value);
+    var s = parseInt(document.getElementById('sat').value);
+    var b = parseInt(document.getElementById('bri').value);
+    var col = hslToHex(h, s, b);
+    document.getElementById('color-preview').style.background = col;
+    document.getElementById('hex-display').textContent = col;
+    return col;
+}
+function applyColor() {
+    var col = updateColorPreview();
+    setThemeColor(col);
+    document.getElementById('color-picker').classList.remove('active');
+    showToast('主题色已更新', 'success');
+}
+document.getElementById('hue').addEventListener('input', updateColorPreview);
+document.getElementById('sat').addEventListener('input', updateColorPreview);
+document.getElementById('bri').addEventListener('input', updateColorPreview);
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        if (document.getElementById('cmd-window').classList.contains('active')) closeCmd();
+        if (document.getElementById('auth-overlay').classList.contains('active')) closeAuth();
+        if (document.getElementById('uc-overlay').classList.contains('active')) closeUserCenter();
+        if (document.getElementById('admin-overlay').classList.contains('active')) closeAdminPanel();
+        if (document.getElementById('join-modal').classList.contains('active')) closeJoinModal();
+        if (document.getElementById('notice-edit-modal').classList.contains('active')) closeNoticeEdit();
+        if (document.getElementById('notice-view-modal').classList.contains('active')) closeNoticeView();
+    }
+});
+
+/* 粒子 */
+(function () {
+    const canvas = document.getElementById('particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0;
+    const particles = [];
+    const COUNT = 180, MIN_R = 0.8, MAX_R = 1.8, MIN_A = 0.03, MAX_A = 0.10, SPEED = 0.2;
+    const MOUSE_RADIUS = 120, MOUSE_FORCE = 0.3;
+    const mouse = { x: -9999, y: -9999 };
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
+    function createParticle() {
+        return { x: Math.random() * W, y: Math.random() * H, r: rand(MIN_R, MAX_R), a: rand(MIN_A, MAX_A), vx: rand(-SPEED, SPEED), vy: rand(-SPEED, SPEED), twinkle: rand(0, Math.PI * 2), twinkleSpeed: rand(0.005, 0.015) };
+    }
+    function init() { resize(); particles.length = 0; for (let i = 0; i < COUNT; i++) particles.push(createParticle()); }
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const dx = p.x - mouse.x, dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_RADIUS && dist > 0.1) {
+                const strength = (1 - dist / MOUSE_RADIUS) * MOUSE_FORCE;
+                p.vx += (dx / dist) * strength; p.vy += (dy / dist) * strength;
+            }
+            p.x += p.vx; p.y += p.vy; p.vx *= 0.97; p.vy *= 0.97;
+            if (Math.abs(p.vx) < 0.05) p.vx += (Math.random() - 0.5) * 0.02;
+            if (Math.abs(p.vy) < 0.05) p.vy += (Math.random() - 0.5) * 0.02;
+            p.twinkle += p.twinkleSpeed;
+            const breath = (Math.sin(p.twinkle) + 1) / 2;
+            const alpha = p.a * (0.4 + breath * 0.6);
+            if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+            if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')'; ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', function () { resize(); for (let i = 0; i < particles.length; i++) { particles[i].x = Math.random() * W; particles[i].y = Math.random() * H; } });
+    window.addEventListener('mousemove', function (e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', function () { mouse.x = -9999; mouse.y = -9999; });
+    window.addEventListener('touchmove', function (e) { if (e.touches.length > 0) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } }, { passive: true });
+    window.addEventListener('touchend', function () { mouse.x = -9999; mouse.y = -9999; });
+    if (document.readyState === 'complete' || document.readyState === 'interactive') { setTimeout(init, 0); }
+    else { document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 0); }); }
+    requestAnimationFrame(draw);
+})();
+
+async function boot() {
+    await initSB();
+    if (state.user) {
+        updateUI();
+        showToast('欢迎回来，' + state.user, 'success');
+    } else {
+        updateUI();
+    }
+    applyLang();
+    await loadNotice();
+}
+
+boot();
+
+Object.assign(window, {
+    openChat,
+    openAuth, closeAuth, toggleAuthMode, handleAuth,
+    openUserCenter, closeUserCenter, logoutUser, handleUCAvatar, saveUCProfile, previewAvatar,
+    openCmd, closeCmd, sendCmd,
+    openAdminPanel, closeAdminPanel, setUserRole, deleteUser,
+    applyColor, updateColorPreview, switchLang,
+    openJoinModal, closeJoinModal, submitApplication,
+    loadApplications, handleApplication,
+    handleNoticeClick, openNoticeEdit, closeNoticeEdit, saveNotice, clearNotice,
+    openNoticeView, closeNoticeView
+});
+
+console.log('APE 主页已加载 · 公告 · 聊天入口 · 登录后申请');
+</script>
+</body>
+</html>

@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>APE · 新闻</title>
+<link rel="icon" type="image/png" href="https://s3.bmp.ovh/2026/09/02/yCkTXnjy.png">
+<link rel="preconnect" href="https://fonts.font.im">
+<link href="https://fonts.font.im/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    :root {
+        --primary: #888;
+        --bg: #0a0a0f;
+        --text: #f0f0f5;
+        --text-secondary: rgba(255,255,255,0.6);
+        --text-tertiary: rgba(255,255,255,0.3);
+        --border: rgba(255,255,255,0.08);
+        --card-bg: rgba(10,10,15,0.55);
+        --card-hover: rgba(20,20,26,0.7);
+        --radius: 16px;
+    }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: 'Inter', -apple-system, sans-serif;
+        font-weight: 400;
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    /* 全屏背景图 */
+    .bg-image {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        background-image: url('https://img.remit.ee/i/6Xej8YZ4gzD1');
+        background-position: center;
+        background-size: cover;
+        background-repeat: no-repeat;
+        z-index: 0;
+        pointer-events: none;
+    }
+    .bg-image::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            to bottom,
+            rgba(10,10,15,0.72) 0%,
+            rgba(10,10,15,0.75) 50%,
+            rgba(10,10,15,0.9) 100%
+        );
+        pointer-events: none;
+    }
+
+    #particles {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100vw; height: 100vh;
+        z-index: 1;
+        pointer-events: none;
+        display: block;
+    }
+    .content, .top-bar { position: relative; z-index: 2; }
+
+    .top-bar {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        z-index: 1000;
+    }
+    .top-bar .back-btn {
+        height: 40px;
+        padding: 0 16px;
+        border-radius: 10px;
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        display: flex; align-items: center;
+        white-space: nowrap;
+        backdrop-filter: blur(12px);
+    }
+    .top-bar .back-btn:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .top-bar .avatar-btn {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(10,10,15,0.7);
+        cursor: pointer;
+        overflow: hidden;
+        transition: background 0.15s, border-color 0.15s;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 500;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+        backdrop-filter: blur(12px);
+    }
+    .top-bar .avatar-btn:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .top-bar .avatar-btn img { width: 100%; height: 100%; object-fit: cover; }
+    .top-bar .lang-select {
+        height: 40px;
+        padding: 0 32px 0 14px;
+        border-radius: 10px;
+        background-color: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 13px;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        outline: none;
+        appearance: none;
+        -webkit-appearance: none;
+        backdrop-filter: blur(12px);
+        background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23888' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        transition: background-color 0.15s, color 0.15s;
+    }
+    .top-bar .lang-select:hover { background-color: rgba(20,20,26,0.9); color: #fff; }
+    .top-bar .lang-select option { background: var(--bg); color: var(--text); }
+
+    .content {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 140px 48px 80px;
+    }
+
+    .page-title {
+        font-size: clamp(48px, 10vw, 120px);
+        font-weight: 700;
+        letter-spacing: -4px;
+        line-height: 1;
+        color: rgba(255,255,255,0.9);
+        margin-bottom: 16px;
+        text-align: center;
+    }
+    .page-sub {
+        font-size: 14px;
+        font-weight: 300;
+        color: var(--text-tertiary);
+        letter-spacing: 4px;
+        margin-bottom: 56px;
+        text-align: center;
+    }
+
+    .page-actions {
+        display: flex; gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+        justify-content: center;
+    }
+    .page-actions button {
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 20px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        backdrop-filter: blur(12px);
+    }
+    .page-actions button:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .page-actions button.primary {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+    .page-actions button.primary:hover { background: #999; border-color: #999; }
+
+    /* 新闻列表 */
+    .news-grid {
+        display: flex;
+        flex-direction: column;
+    }
+    .news-card {
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        padding: 28px 0;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: opacity 0.15s;
+        position: relative;
+    }
+    .news-card:first-child { border-top: 1px solid var(--border); }
+    .news-card:hover { opacity: 0.85; }
+    .news-card .news-info {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .news-card .news-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.5px;
+    }
+    .news-card .news-meta .pin-tag {
+        color: #ffd700;
+        font-size: 11px;
+    }
+    .news-card .news-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.9);
+        letter-spacing: -0.3px;
+        line-height: 1.4;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .news-card .news-excerpt {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .news-card .news-stats {
+        display: flex;
+        gap: 18px;
+        font-size: 12px;
+        color: var(--text-tertiary);
+        margin-top: 4px;
+    }
+    .news-card .news-cover {
+        width: 140px;
+        height: 140px;
+        border-radius: 12px;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.03);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        color: var(--text-tertiary);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.6; }
+    .empty-state .text { font-size: 14px; letter-spacing: 2px; font-weight: 300; }
+
+    /* 详情页 */
+    #detail-page { display: none; }
+    .detail-cover {
+        width: 100%;
+        max-height: 520px;
+        object-fit: cover;
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        margin-bottom: 36px;
+        display: none;
+    }
+    .detail-header {
+        margin-bottom: 36px;
+        padding-bottom: 28px;
+        border-bottom: 1px solid var(--border);
+    }
+    .detail-title {
+        font-size: 32px;
+        font-weight: 700;
+        color: rgba(255,255,255,0.9);
+        letter-spacing: -0.5px;
+        line-height: 1.3;
+        margin-bottom: 14px;
+    }
+    .detail-meta {
+        font-size: 13px;
+        color: var(--text-tertiary);
+        letter-spacing: 0.5px;
+    }
+    .detail-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 18px;
+    }
+    .detail-actions button {
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 8px 16px;
+        color: var(--text-secondary);
+        font-size: 13px;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+        backdrop-filter: blur(12px);
+    }
+    .detail-actions button:hover {
+        background: rgba(20,20,26,0.9);
+        color: #fff;
+        border-color: rgba(255,255,255,0.15);
+    }
+    .detail-actions button.liked { color: var(--primary); border-color: rgba(136,136,136,0.5); }
+    .detail-actions button.faved { color: #ffd700; border-color: rgba(255,215,0,0.4); }
+
+    .news-body {
+        font-size: 16px;
+        line-height: 1.9;
+        color: var(--text-secondary);
+    }
+    .news-body h1, .news-body h2, .news-body h3 {
+        color: rgba(255,255,255,0.9);
+        font-weight: 600;
+        margin: 28px 0 14px;
+        letter-spacing: -0.3px;
+    }
+    .news-body h1 { font-size: 28px; }
+    .news-body h2 { font-size: 24px; }
+    .news-body h3 { font-size: 20px; }
+    .news-body p { margin-bottom: 18px; }
+    .news-body ul, .news-body ol {
+        margin: 18px 0;
+        padding-left: 24px;
+    }
+    .news-body li { margin-bottom: 6px; }
+    .news-body blockquote {
+        border-left: 3px solid var(--border);
+        padding-left: 18px;
+        margin: 22px 0;
+        color: var(--text-tertiary);
+        font-style: italic;
+    }
+    .news-body pre {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        overflow-x: auto;
+        margin: 18px 0;
+        font-family: monospace;
+        font-size: 14px;
+    }
+    .news-body a { color: var(--primary); text-decoration: none; }
+    .news-body a:hover { text-decoration: underline; }
+    .news-body img { max-width: 100%; border-radius: 8px; margin: 18px 0; }
+
+    /* 编辑器 */
+    .ql-toolbar.ql-snow {
+        border: 1px solid var(--border) !important;
+        border-radius: 10px 10px 0 0 !important;
+        background: rgba(10,10,15,0.7);
+        padding: 12px 14px !important;
+        backdrop-filter: blur(12px);
+    }
+    .ql-toolbar.ql-snow .ql-picker,
+    .ql-toolbar.ql-snow button {
+        color: var(--text-secondary) !important;
+    }
+    .ql-toolbar.ql-snow .ql-stroke { stroke: var(--text-secondary) !important; }
+    .ql-toolbar.ql-snow .ql-fill { fill: var(--text-secondary) !important; }
+    .ql-toolbar.ql-snow .ql-picker-options {
+        background: #131318 !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 8px !important;
+    }
+    .ql-container.ql-snow {
+        border: 1px solid var(--border) !important;
+        border-top: none !important;
+        border-radius: 0 0 10px 10px !important;
+        background: rgba(10,10,15,0.7);
+        backdrop-filter: blur(12px);
+        font-family: 'Inter', sans-serif !important;
+        font-size: 15px !important;
+    }
+    .ql-editor {
+        color: var(--text) !important;
+        min-height: 320px;
+        padding: 20px 24px !important;
+        line-height: 1.8 !important;
+    }
+    .ql-editor.ql-blank::before {
+        color: var(--text-tertiary) !important;
+        font-style: normal !important;
+    }
+    .ql-editor h1, .ql-editor h2, .ql-editor h3 { color: rgba(255,255,255,0.9) !important; }
+    .ql-editor blockquote { border-left: 3px solid var(--border) !important; }
+
+    #editor-page { display: none; }
+    .editor-field { margin-bottom: 24px; }
+    .editor-field label {
+        display: block;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--text-secondary);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+    .editor-field input[type="text"] {
+        width: 100%;
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        color: var(--text);
+        font-size: 16px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        backdrop-filter: blur(12px);
+        transition: border-color 0.15s, background 0.15s;
+    }
+    .editor-field input[type="text"]:focus {
+        border-color: rgba(255,255,255,0.2);
+        background: rgba(20,20,26,0.8);
+    }
+    .cover-preview {
+        width: 100%;
+        max-height: 260px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-top: 14px;
+        display: none;
+    }
+
+    /* 评论 */
+    .comments-wrap {
+        margin-top: 56px;
+        padding-top: 36px;
+        border-top: 1px solid var(--border);
+    }
+    .comments-title {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-tertiary);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 22px;
+    }
+    .comment-item {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .comment-item:last-child { border-bottom: none; }
+    .cmt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+    }
+    .cmt-user { font-weight: 500; font-size: 14px; color: #fff; }
+    .cmt-user .admin-tag {
+        font-size: 10px;
+        background: var(--primary);
+        color: #fff;
+        padding: 1px 8px;
+        border-radius: 8px;
+        margin-left: 6px;
+        font-weight: 500;
+    }
+    .cmt-time { font-size: 11px; color: var(--text-tertiary); margin-left: 8px; }
+    .cmt-content { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+    .cmt-actions button {
+        background: transparent;
+        border: none;
+        color: var(--text-tertiary);
+        font-size: 13px;
+        cursor: pointer;
+        padding: 2px 6px;
+    }
+    .cmt-actions button:hover { color: #ff6b6b; }
+    .comment-input-row { display: flex; gap: 10px; margin-top: 18px; }
+    .comment-input-row input {
+        flex: 1;
+        background: rgba(10,10,15,0.7);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--text);
+        font-size: 14px;
+        font-family: 'Inter', sans-serif;
+        outline: none;
+        backdrop-filter: blur(12px);
+    }
+    .comment-input-row input:focus { border-color: rgba(255,255,255,0.2); }
+    .comment-input-row button {
+        background: var(--primary);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 22px;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .comment-input-row button:hover { background: #999; }
+    .comment-input-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 弹窗 */
+    .modal-overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.8);
+        justify-content: center; align-items: center;
+        z-index: 20000;
+        padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%; max-width: 400px;
+        text-align: center;
+    }
+    .modal-box h3 { color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 12px; }
+    .modal-box .modal-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6; }
+    .modal-box .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    .modal-box .modal-actions button {
+        padding: 10px 22px;
+        border-radius: 10px;
+        border: none;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+    }
+    .modal-box .modal-actions .confirm-btn { background: var(--primary); color: #fff; }
+    .modal-box .modal-actions .confirm-btn:hover { background: #999; }
+    .modal-box .modal-actions .cancel-btn {
+        background: rgba(255,255,255,0.06);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+    .modal-box .modal-actions .cancel-btn:hover { background: rgba(255,255,255,0.1); }
+
+    #auth-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px;
+        width: 100%; max-width: 380px;
+        text-align: center;
+    }
+    #auth-box h3 { color: #fff; font-size: 20px; font-weight: 600; margin-bottom: 24px; }
+    #auth-box .input {
+        width: 100%; margin-bottom: 12px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text);
+        font-size: 14px;
+        outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+    #auth-box .input:focus { border-color: rgba(255,255,255,0.2); }
+    #auth-box .btn-submit {
+        width: 100%; padding: 12px;
+        background: var(--primary); color: #fff;
+        border: none; border-radius: 10px;
+        font-size: 14px; font-weight: 500;
+        cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        margin-top: 8px;
+    }
+    #auth-box .btn-submit:hover { background: #999; }
+    #auth-box .switch { margin-top: 16px; font-size: 13px; color: var(--text-tertiary); cursor: pointer; }
+    #auth-box .switch span { color: var(--primary); }
+    #auth-box .close { margin-top: 14px; color: var(--text-tertiary); font-size: 12px; cursor: pointer; display: block; }
+
+    .overlay {
+        display: none;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.8);
+        justify-content: center; align-items: center;
+        z-index: 10000;
+        padding: 20px;
+    }
+    .overlay.active { display: flex; }
+    .uc-box {
+        background: #131318;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 32px 28px;
+        width: 100%; max-width: 400px;
+    }
+    .uc-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--border);
+        margin-bottom: 24px;
+    }
+    .uc-header .avatar {
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border);
+        margin-bottom: 14px;
+        display: none;
+    }
+    .uc-header .name { font-size: 20px; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .uc-section { margin-bottom: 20px; }
+    .uc-section-title {
+        font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+        letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+    }
+    .uc-field { display: flex; gap: 8px; align-items: center; }
+    .uc-field input {
+        flex: 1; padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text);
+        font-size: 14px; outline: none;
+        font-family: 'Inter', sans-serif;
+    }
+    .uc-field input:focus { border-color: rgba(255,255,255,0.2); }
+    .uc-field button {
+        padding: 10px 18px;
+        background: var(--primary);
+        color: #fff; border: none; border-radius: 8px;
+        cursor: pointer; font-size: 13px; font-weight: 500;
+        font-family: 'Inter', sans-serif;
+    }
+    .uc-field button:hover { background: #999; }
+    .uc-avatar-row { display: flex; align-items: center; gap: 14px; }
+    .uc-avatar-preview {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        object-fit: cover;
+        background: rgba(255,255,255,0.06);
+        border: 1px solid var(--border);
+        display: none; flex-shrink: 0;
+    }
+    .uc-avatar-row label {
+        flex: 1; padding: 10px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.04);
+        color: var(--text-secondary);
+        font-size: 13px; cursor: pointer;
+        text-align: center;
+    }
+    .uc-avatar-row label:hover { background: rgba(255,255,255,0.07); color: #fff; }
+    .uc-actions {
+        display: flex; flex-direction: column; gap: 8px;
+        padding-top: 20px;
+        border-top: 1px solid var(--border);
+    }
+    .uc-actions button {
+        padding: 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text);
+        font-size: 14px; cursor: pointer;
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+    }
+    .uc-actions button:hover { background: rgba(255,255,255,0.06); }
+    .uc-actions .admin-btn { color: var(--primary); border-color: rgba(136,136,136,0.4); }
+    .uc-actions .logout { color: #ff6b6b; border-color: rgba(231,76,60,0.3); }
+
+    #toast-container {
+        position: fixed; bottom: 80px; left: 50%;
+        transform: translateX(-50%);
+        z-index: 99999; pointer-events: none;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 8px;
+    }
+    .toast-item {
+        padding: 10px 24px;
+        border-radius: 8px;
+        background: rgba(0,0,0,0.9);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff; font-size: 13px;
+        animation: toastIn 0.2s ease;
+    }
+    .toast-item.error { border-color: rgba(231,76,60,0.4); }
+    .toast-item.success { border-color: rgba(76,175,80,0.4); }
+    @keyframes toastIn { 0% { opacity: 0; transform: translateY(8px); } 100% { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { 0% { opacity: 1; } 100% { opacity: 0; } }
+
+    @media (max-width: 768px) {
+        .top-bar { top: 14px; right: 14px; gap: 8px; }
+        .top-bar .back-btn { height: 38px; padding: 0 14px; font-size: 12px; }
+        .top-bar .avatar-btn { width: 38px; height: 38px; font-size: 13px; }
+        .top-bar .lang-select { height: 38px; font-size: 12px; padding: 0 28px 0 12px; background-position: right 10px center; }
+        .content { padding: 100px 20px 60px; }
+        .page-title { font-size: clamp(40px, 14vw, 72px); letter-spacing: -2px; }
+        .page-sub { font-size: 12px; letter-spacing: 3px; margin-bottom: 40px; }
+
+        .news-card {
+            gap: 16px;
+            padding: 22px 0;
+        }
+        .news-card .news-cover {
+            width: 96px;
+            height: 96px;
+            border-radius: 10px;
+        }
+        .news-card .news-title { font-size: 17px; }
+        .news-card .news-excerpt { font-size: 13px; -webkit-line-clamp: 2; }
+        .news-card .news-meta { font-size: 11px; }
+
+        .detail-title { font-size: 24px; }
+        .ql-editor { min-height: 240px; padding: 16px 18px !important; }
+    }
+    @media (max-width: 480px) {
+        .news-card .news-cover {
+            width: 80px;
+            height: 80px;
+        }
+        .news-card .news-title { font-size: 16px; }
+        .news-card .news-excerpt { -webkit-line-clamp: 2; }
+    }
+</style>
+</head>
+<body>
+
+<div class="bg-image"></div>
+<canvas id="particles"></canvas>
+
+<div id="toast-container"></div>
+
+<div class="top-bar">
+    <button class="back-btn" onclick="goBack()">← 返回</button>
+    <select class="lang-select" id="lang-select" onchange="switchLang(this.value)">
+        <option value="zh-CN">简体</option>
+        <option value="zh-TW">繁體</option>
+        <option value="en">English</option>
+    </select>
+    <button class="avatar-btn" id="avatar-btn" onclick="openUserCenter()" title="用户中心">
+        <span id="avatar-text">👤</span>
+        <img id="avatar-img" style="display:none;" alt="avatar">
+    </button>
+</div>
+
+<section class="content">
+
+    <div id="list-page">
+        <div class="page-title" data-i18n="news_title">APE 新闻</div>
+        <div class="page-sub" data-i18n="news_sub">— 社区动态 · 公告 —</div>
+        <div class="page-actions">
+            <button class="primary" id="new-news-btn" onclick="openEditor()" style="display:none;" data-i18n="btn_new_news">📝 发布新闻</button>
+            <button onclick="loadNews()" data-i18n="btn_refresh">🔄 刷新</button>
+        </div>
+        <div class="news-grid" id="news-grid"></div>
+    </div>
+
+    <div id="detail-page">
+        <img class="detail-cover" id="detail-cover" alt="cover">
+        <div class="detail-header">
+            <div class="detail-title" id="detail-title"></div>
+            <div class="detail-meta" id="detail-meta"></div>
+            <div class="detail-actions" id="detail-actions"></div>
+        </div>
+        <div class="news-body" id="detail-body"></div>
+
+        <div class="comments-wrap">
+            <div class="comments-title" data-i18n="comments_title">💬 评论</div>
+            <div id="comments-list"></div>
+            <div class="comment-input-row">
+                <input id="comment-input" placeholder="写评论..." maxlength="500" data-i18n-ph="comment_placeholder">
+                <button id="comment-btn" onclick="submitComment()" data-i18n="comment_send">发送</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editor-page">
+        <div class="detail-header">
+            <div class="detail-title" id="editor-title-text" data-i18n="editor_title">发布新闻</div>
+            <div class="detail-actions">
+                <button class="primary" onclick="saveNews()" style="background:var(--primary);color:#fff;border-color:var(--primary);" data-i18n="btn_publish">📤 发布</button>
+                <button onclick="closeEditor()" data-i18n="btn_cancel">✕ 取消</button>
+            </div>
+        </div>
+
+        <div class="editor-field">
+            <label data-i18n="label_title">标题 *</label>
+            <input type="text" id="news-title-input" placeholder="输入标题..." maxlength="200">
+        </div>
+
+        <div class="editor-field">
+            <label data-i18n="label_cover">封面图链接（可选）</label>
+            <input type="text" id="cover-url-input" placeholder="https://..." oninput="previewCoverUrl()">
+            <img class="cover-preview" id="cover-preview" alt="cover preview">
+        </div>
+
+        <div class="editor-field">
+            <label data-i18n="label_content">正文 *</label>
+            <div class="editor-wrap">
+                <div id="quill-editor"></div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<div class="overlay" id="auth-overlay" onclick="if(event.target===this) closeAuth()">
+    <div id="auth-box">
+        <h3 id="auth-title">登录 APE</h3>
+        <input id="auth-username" class="input" placeholder="用户名">
+        <input id="auth-password" class="input" type="password" placeholder="密码">
+        <button id="auth-btn" class="btn-submit" onclick="handleAuth()">登录</button>
+        <div class="switch" onclick="toggleAuthMode()" id="auth-switch">没有账号？ <span>去注册</span></div>
+        <div class="close" onclick="closeAuth()">关闭</div>
+    </div>
+</div>
+
+<div class="overlay" id="uc-overlay" onclick="if(event.target===this) closeUserCenter()">
+    <div class="uc-box">
+        <div class="uc-header">
+            <img id="uc-avatar" class="avatar" src="" alt="avatar">
+            <div class="name" id="uc-name"></div>
+        </div>
+        <div class="uc-section">
+            <div class="uc-section-title" data-i18n="uc_edit_name">修改用户名</div>
+            <div class="uc-field">
+                <input id="uc-edit-name" placeholder="新用户名">
+                <button onclick="saveUCProfile()" data-i18n="save">保存</button>
+            </div>
+        </div>
+        <div class="uc-section">
+            <div class="uc-section-title" data-i18n="uc_change_avatar">更换头像</div>
+            <div class="uc-avatar-row">
+                <img id="uc-avatar-preview" class="uc-avatar-preview">
+                <label for="uc-edit-avatar" data-i18n="uc_pick_image">选择图片</label>
+                <input type="file" id="uc-edit-avatar" accept="image/*" style="display:none;" onchange="handleUCAvatar(event)">
+            </div>
+        </div>
+        <div class="uc-actions">
+            <button class="admin-btn" id="uc-admin-btn" onclick="openAdminPanel()" style="display:none;" data-i18n="admin">管理面板</button>
+            <button class="logout" onclick="logoutUser()" data-i18n="logout">登出</button>
+            <button onclick="closeUserCenter()" data-i18n="back">返回</button>
+        </div>
+    </div>
+</div>
+
+<div class="overlay" id="admin-overlay" onclick="if(event.target===this) closeAdminPanel()">
+    <div class="uc-box" style="max-width:540px;">
+        <div class="uc-header">
+            <div class="name" data-i18n="admin_title">用户管理</div>
+        </div>
+        <div id="admin-user-list"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="confirm-overlay" onclick="if(event.target===this) closeConfirm()">
+    <div class="modal-box">
+        <h3 id="confirm-title">确认</h3>
+        <div class="modal-desc" id="confirm-desc"></div>
+        <div class="modal-actions">
+            <button class="cancel-btn" onclick="closeConfirm()" data-i18n="cancel">取消</button>
+            <button class="confirm-btn" id="confirm-btn" onclick="confirmAction()" data-i18n="confirm_btn">确认</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let SB = null;
+
+async function initSB() {
+    const res = await fetch('key.json');
+    const cfg = await res.json();
+    SB = supabase.createClient(cfg.supabase_url, cfg.supabase_key);
+}
+
+const state = {
+    user: localStorage.getItem('ape_user') || null,
+    avatar: localStorage.getItem('ape_avatar') || null,
+    role: localStorage.getItem('ape_role') || 'user',
+    isLogin: false,
+    lang: localStorage.getItem('ape_lang') || 'zh-CN',
+    currentNewsId: null,
+    currentNewsData: null,
+    currentLikeState: false,
+    currentFavState: false,
+    editingNewsId: null,
+    confirmCallback: null,
+    quill: null
+};
+
+const ADMIN_USER = 'Aplefox';
+
+const LANG_DATA = {
+    'zh-CN': {
+        news_title: 'APE 新闻',
+        news_sub: '— 社区动态 · 公告 —',
+        btn_new_news: '📝 发布新闻',
+        btn_refresh: '🔄 刷新',
+        news_empty: '📰 还没有新闻，等待管理员发布',
+        comments_title: '💬 评论',
+        comment_placeholder: '写评论...',
+        comment_send: '发送',
+        comment_success: '评论已发送',
+        login_to_comment: '请先登录再评论',
+        login_to_like: '请先登录再点赞',
+        login_to_fav: '请先登录再收藏',
+        delete_comment_confirm: '确认删除此评论？',
+        comment_deleted: '评论已删除',
+        no_comments: '还没有评论',
+        editor_title: '发布新闻',
+        editor_title_edit: '编辑新闻',
+        label_title: '标题 *',
+        label_cover: '封面图链接（可选）',
+        label_content: '正文 *',
+        btn_publish: '📤 发布',
+        btn_cancel: '✕ 取消',
+        btn_edit: '✏️ 编辑',
+        btn_delete: '🗑️ 删除',
+        btn_pin: '📌 置顶',
+        btn_unpin: '📍 取消置顶',
+        btn_back: '← 返回列表',
+        like: '❤️ 点赞',
+        liked: '❤️ 已赞',
+        fav: '⭐ 收藏',
+        faved: '⭐ 已收藏',
+        save: '保存',
+        back: '返回',
+        admin: '管理面板',
+        logout: '登出',
+        admin_title: '用户管理',
+        cancel: '取消',
+        confirm_btn: '确认',
+        loading: '加载中...',
+        no_data: '暂无用户',
+        confirm_delete_news: '确认删除这篇新闻？'
+    },
+    'zh-TW': {
+        news_title: 'APE 新聞',
+        news_sub: '— 社區動態 · 公告 —',
+        btn_new_news: '📝 發布新聞',
+        btn_refresh: '🔄 重新載入',
+        news_empty: '📰 還沒有新聞，等待管理員發布',
+        comments_title: '💬 評論',
+        comment_placeholder: '寫評論...',
+        comment_send: '發送',
+        comment_success: '評論已發送',
+        login_to_comment: '請先登入再評論',
+        login_to_like: '請先登入再點讚',
+        login_to_fav: '請先登入再收藏',
+        delete_comment_confirm: '確認刪除此評論？',
+        comment_deleted: '評論已刪除',
+        no_comments: '還沒有評論',
+        editor_title: '發布新聞',
+        editor_title_edit: '編輯新聞',
+        label_title: '標題 *',
+        label_cover: '封面圖連結（可選）',
+        label_content: '正文 *',
+        btn_publish: '📤 發布',
+        btn_cancel: '✕ 取消',
+        btn_edit: '✏️ 編輯',
+        btn_delete: '🗑️ 刪除',
+        btn_pin: '📌 置頂',
+        btn_unpin: '📍 取消置頂',
+        btn_back: '← 返回列表',
+        like: '❤️ 點讚',
+        liked: '❤️ 已讚',
+        fav: '⭐ 收藏',
+        faved: '⭐ 已收藏',
+        save: '儲存',
+        back: '返回',
+        admin: '管理面板',
+        logout: '登出',
+        admin_title: '使用者管理',
+        cancel: '取消',
+        confirm_btn: '確認',
+        loading: '載入中...',
+        no_data: '暫無用戶',
+        confirm_delete_news: '確認刪除這篇新聞？'
+    },
+    'en': {
+        news_title: 'APE News',
+        news_sub: '— Updates · Announcements —',
+        btn_new_news: '📝 Post News',
+        btn_refresh: '🔄 Refresh',
+        news_empty: '📰 No news yet, waiting for admin',
+        comments_title: '💬 Comments',
+        comment_placeholder: 'Write a comment...',
+        comment_send: 'Send',
+        comment_success: 'Comment sent',
+        login_to_comment: 'Please login to comment',
+        login_to_like: 'Please login to like',
+        login_to_fav: 'Please login to favorite',
+        delete_comment_confirm: 'Confirm delete this comment?',
+        comment_deleted: 'Comment deleted',
+        no_comments: 'No comments yet',
+        editor_title: 'Post News',
+        editor_title_edit: 'Edit News',
+        label_title: 'Title *',
+        label_cover: 'Cover Image URL (optional)',
+        label_content: 'Content *',
+        btn_publish: '📤 Publish',
+        btn_cancel: '✕ Cancel',
+        btn_edit: '✏️ Edit',
+        btn_delete: '🗑️ Delete',
+        btn_pin: '📌 Pin',
+        btn_unpin: '📍 Unpin',
+        btn_back: '← Back to list',
+        like: '❤️ Like',
+        liked: '❤️ Liked',
+        fav: '⭐ Favorite',
+        faved: '⭐ Favorited',
+        save: 'Save',
+        back: 'Back',
+        admin: 'Admin Panel',
+        logout: 'Logout',
+        admin_title: 'User Management',
+        cancel: 'Cancel',
+        confirm_btn: 'Confirm',
+        loading: 'Loading...',
+        no_data: 'No users',
+        confirm_delete_news: 'Confirm delete this news?'
+    }
+};
+
+function t(key) {
+    return LANG_DATA[state.lang]?.[key] || LANG_DATA['zh-CN'][key] || key;
+}
+
+function applyLang() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (!key) return;
+        const val = t(key);
+        if (val.includes('<span>')) el.innerHTML = val;
+        else el.textContent = val;
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        const key = el.getAttribute('data-i18n-ph');
+        if (key) el.placeholder = t(key);
+    });
+    const sel = document.getElementById('lang-select');
+    if (sel) sel.value = state.lang;
+    updateAvatarUI();
+    updateNewsBtn();
+    if (state.currentNewsId) updateDetailActions();
+}
+
+function switchLang(val) {
+    state.lang = val;
+    localStorage.setItem('ape_lang', val);
+    applyLang();
+}
+
+function showToast(msg, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = 'toast-item ' + type;
+    el.textContent = msg;
+    container.appendChild(el);
+    setTimeout(() => {
+        el.style.animation = 'toastOut 0.2s ease forwards';
+        setTimeout(() => el.remove(), 200);
+    }, 2000);
+}
+
+function updateAvatarUI() {
+    const textEl = document.getElementById('avatar-text');
+    const imgEl = document.getElementById('avatar-img');
+    if (state.user && state.avatar) {
+        imgEl.src = state.avatar; imgEl.style.display = 'block'; textEl.style.display = 'none';
+    } else if (state.user) {
+        textEl.style.display = 'block';
+        textEl.textContent = state.user.charAt(0).toUpperCase();
+        imgEl.style.display = 'none';
+    } else {
+        textEl.style.display = 'block';
+        textEl.textContent = '👤';
+        imgEl.style.display = 'none';
+    }
+}
+
+function isAdmin() {
+    return state.user === ADMIN_USER || state.role === 'admin';
+}
+
+function updateNewsBtn() {
+    const btn = document.getElementById('new-news-btn');
+    if (btn) btn.style.display = isAdmin() ? 'inline-block' : 'none';
+}
+
+function goBack() {
+    const detail = document.getElementById('detail-page');
+    const editor = document.getElementById('editor-page');
+    if (editor.style.display !== 'none') { closeEditor(); return; }
+    if (detail.style.display !== 'none') { showList(); return; }
+    window.location.href = 'index.html';
+}
+
+function showList() {
+    document.getElementById('list-page').style.display = 'block';
+    document.getElementById('detail-page').style.display = 'none';
+    document.getElementById('editor-page').style.display = 'none';
+    state.currentNewsId = null;
+    loadNews();
+}
+
+async function loadNews() {
+    const grid = document.getElementById('news-grid');
+    grid.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:60px 20px;">' + t('loading') + '</div>';
+    try {
+        const { data, error } = await SB.from('news')
+            .select('*')
+            .order('is_pinned', { ascending: false })
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            grid.innerHTML = `<div class="empty-state"><div class="icon">📰</div><div class="text">${t('news_empty')}</div></div>`;
+            return;
+        }
+        grid.innerHTML = data.map(n => {
+            const excerpt = stripHtml(n.content).slice(0, 120);
+            const coverHtml = n.cover_url
+                ? `<img class="news-cover" src="${n.cover_url}" alt="" onerror="this.style.display='none'">`
+                : '';
+            return `
+                <div class="news-card" onclick="openDetail(${n.id})">
+                    <div class="news-info">
+                        <div class="news-meta">
+                            ${n.is_pinned ? '<span class="pin-tag">📌 置顶</span>' : ''}
+                            <span>${n.author}</span>
+                            <span>·</span>
+                            <span>${new Date(n.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="news-title">${n.title}</div>
+                        <div class="news-excerpt">${excerpt}</div>
+                        <div class="news-stats">
+                            <span>❤️ <span id="list-like-${n.id}">-</span></span>
+                            <span>⭐ <span id="list-fav-${n.id}">-</span></span>
+                        </div>
+                    </div>
+                    ${coverHtml}
+                </div>
+            `;
+        }).join('');
+        data.forEach(n => { loadCounts(n.id); });
+    } catch (err) {
+        grid.innerHTML = `<div class="empty-state"><div class="text">加载失败: ${err.message}</div></div>`;
+    }
+}
+
+async function loadCounts(newsId) {
+    try {
+        const { count: likeCount } = await SB.from('news_likes')
+            .select('id', { count: 'exact', head: true }).eq('news_id', newsId);
+        const { count: favCount } = await SB.from('news_favorites')
+            .select('id', { count: 'exact', head: true }).eq('news_id', newsId);
+        const likeEl = document.getElementById('list-like-' + newsId);
+        const favEl = document.getElementById('list-fav-' + newsId);
+        if (likeEl) likeEl.textContent = likeCount || 0;
+        if (favEl) favEl.textContent = favCount || 0;
+    } catch (e) {}
+}
+
+function stripHtml(html) {
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || '';
+}
+
+async function openDetail(newsId) {
+    try {
+        const { data: news, error } = await SB.from('news').select('*').eq('id', newsId).single();
+        if (error) throw error;
+        state.currentNewsId = newsId;
+        state.currentNewsData = news;
+
+        document.getElementById('list-page').style.display = 'none';
+        document.getElementById('editor-page').style.display = 'none';
+        document.getElementById('detail-page').style.display = 'block';
+
+        document.getElementById('detail-title').textContent = news.title;
+        document.getElementById('detail-meta').textContent = `${news.author} · ${new Date(news.created_at).toLocaleString()}`;
+        document.getElementById('detail-body').innerHTML = news.content;
+
+        const coverEl = document.getElementById('detail-cover');
+        if (news.cover_url) {
+            coverEl.src = news.cover_url;
+            coverEl.style.display = 'block';
+        } else {
+            coverEl.style.display = 'none';
+            coverEl.src = '';
+        }
+
+        await updateDetailActions();
+        await loadComments(newsId);
+        window.scrollTo(0, 0);
+    } catch (err) {
+        showToast('加载失败: ' + err.message, 'error');
+    }
+}
+
+async function updateDetailActions() {
+    const container = document.getElementById('detail-actions');
+    if (!state.currentNewsId) return;
+    let likeCount = 0, favCount = 0;
+    try {
+        const { count: lc } = await SB.from('news_likes')
+            .select('id', { count: 'exact', head: true }).eq('news_id', state.currentNewsId);
+        const { count: fc } = await SB.from('news_favorites')
+            .select('id', { count: 'exact', head: true }).eq('news_id', state.currentNewsId);
+        likeCount = lc || 0;
+        favCount = fc || 0;
+    } catch (e) {}
+
+    let liked = false, faved = false;
+    if (state.user) {
+        const { data: l } = await SB.from('news_likes')
+            .select('id').eq('news_id', state.currentNewsId).eq('username', state.user);
+        const { data: f } = await SB.from('news_favorites')
+            .select('id').eq('news_id', state.currentNewsId).eq('username', state.user);
+        liked = l && l.length > 0;
+        faved = f && f.length > 0;
+    }
+    state.currentLikeState = liked;
+    state.currentFavState = faved;
+
+    let html = '';
+    html += `<button class="${liked ? 'liked' : ''}" onclick="toggleLike()">${liked ? t('liked') : t('like')} <span id="like-count">${likeCount}</span></button>`;
+    html += `<button class="${faved ? 'faved' : ''}" onclick="toggleFav()">${faved ? t('faved') : t('fav')} <span id="fav-count">${favCount}</span></button>`;
+
+    if (isAdmin()) {
+        html += `<button onclick="openEditor(${state.currentNewsId})">${t('btn_edit')}</button>`;
+        html += `<button onclick="togglePin(${state.currentNewsId}, ${state.currentNewsData.is_pinned})">${state.currentNewsData.is_pinned ? t('btn_unpin') : t('btn_pin')}</button>`;
+        html += `<button onclick="deleteNews(${state.currentNewsId})" style="color:#ff6b6b;border-color:rgba(231,76,60,0.3);">${t('btn_delete')}</button>`;
+    }
+    html += `<button onclick="showList()">${t('btn_back')}</button>`;
+    container.innerHTML = html;
+}
+
+async function toggleLike() {
+    if (!state.user) { showToast(t('login_to_like'), 'error'); openAuth(); return; }
+    try {
+        if (state.currentLikeState) {
+            await SB.from('news_likes').delete().eq('news_id', state.currentNewsId).eq('username', state.user);
+        } else {
+            await SB.from('news_likes').insert({ news_id: state.currentNewsId, username: state.user });
+        }
+        await updateDetailActions();
+        loadCounts(state.currentNewsId);
+    } catch (err) {
+        showToast('操作失败: ' + err.message, 'error');
+    }
+}
+
+async function toggleFav() {
+    if (!state.user) { showToast(t('login_to_fav'), 'error'); openAuth(); return; }
+    try {
+        if (state.currentFavState) {
+            await SB.from('news_favorites').delete().eq('news_id', state.currentNewsId).eq('username', state.user);
+        } else {
+            await SB.from('news_favorites').insert({ news_id: state.currentNewsId, username: state.user });
+        }
+        await updateDetailActions();
+        loadCounts(state.currentNewsId);
+    } catch (err) {
+        showToast('操作失败: ' + err.message, 'error');
+    }
+}
+
+async function loadComments(newsId) {
+    const container = document.getElementById('comments-list');
+    try {
+        const { data, error } = await SB.from('news_comments')
+            .select('*').eq('news_id', newsId)
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div style="color:var(--text-tertiary);font-size:13px;padding:20px 0;text-align:center;">' + t('no_comments') + '</div>';
+            return;
+        }
+        const usernames = [...new Set(data.map(c => c.username))];
+        let roleMap = {};
+        if (usernames.length > 0) {
+            const { data: users } = await SB.from('users').select('username, role').in('username', usernames);
+            if (users) users.forEach(u => { roleMap[u.username] = u.role; });
+        }
+        const admin = isAdmin();
+        container.innerHTML = data.map(c => {
+            const isDeleted = c.is_deleted === true;
+            const isCommentAdmin = roleMap[c.username] === 'admin' || c.username === ADMIN_USER;
+            const canDelete = state.user && (c.username === state.user || admin);
+            let content = isDeleted ? '<div style="color:var(--text-tertiary);font-style:italic;">该评论已删除</div>' : `<div class="cmt-content">${c.content}</div>`;
+            let delBtn = (canDelete && !isDeleted) ? `<button onclick="deleteComment(${c.id})" title="删除">🗑️</button>` : '';
+            let adminTag = (isCommentAdmin && !isDeleted) ? '<span class="admin-tag">管理</span>' : '';
+            return `
+                <div class="comment-item">
+                    <div class="cmt-header">
+                        <div>
+                            <span class="cmt-user">${c.username}${adminTag}</span>
+                            <span class="cmt-time">${new Date(c.created_at).toLocaleString()}</span>
+                        </div>
+                        <div class="cmt-actions">${delBtn}</div>
+                    </div>
+                    ${content}
+                </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('加载评论失败:', err);
+    }
+}
+
+async function submitComment() {
+    if (!state.user) { showToast(t('login_to_comment'), 'error'); openAuth(); return; }
+    const input = document.getElementById('comment-input');
+    const content = input.value.trim();
+    if (!content) return;
+    const btn = document.getElementById('comment-btn');
+    btn.disabled = true;
+    try {
+        const { error } = await SB.from('news_comments').insert({
+            news_id: state.currentNewsId,
+            username: state.user,
+            content: content,
+            is_deleted: false
+        });
+        if (error) throw error;
+        input.value = '';
+        showToast(t('comment_success'), 'success');
+        await loadComments(state.currentNewsId);
+    } catch (err) {
+        showToast('发送失败: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+async function deleteComment(id) {
+    if (!confirm(t('delete_comment_confirm'))) return;
+    try {
+        await SB.from('news_comments').update({ is_deleted: true }).eq('id', id);
+        await loadComments(state.currentNewsId);
+    } catch (err) {
+        showToast('删除失败: ' + err.message, 'error');
+    }
+}
+
+function previewCoverUrl() {
+    const url = document.getElementById('cover-url-input').value.trim();
+    const img = document.getElementById('cover-preview');
+    if (url) {
+        img.onerror = function() { img.style.display = 'none'; };
+        img.src = url;
+        img.style.display = 'block';
+    } else {
+        img.style.display = 'none';
+        img.src = '';
+    }
+}
+
+function initQuill() {
+    if (state.quill) return;
+    state.quill = new Quill('#quill-editor', {
+        theme: 'snow',
+        placeholder: '写点什么...',
+        modules: {
+            toolbar: [
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'header': 1 }, { 'header': 2 }, { 'header': 3 }],
+                [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                ['blockquote', 'code-block'],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+}
+
+function openEditor(newsId) {
+    if (!isAdmin()) { showToast('无权限', 'error'); return; }
+    initQuill();
+    state.editingNewsId = newsId || null;
+    document.getElementById('cover-url-input').value = '';
+    document.getElementById('cover-preview').style.display = 'none';
+    document.getElementById('cover-preview').src = '';
+
+    document.getElementById('list-page').style.display = 'none';
+    document.getElementById('detail-page').style.display = 'none';
+    document.getElementById('editor-page').style.display = 'block';
+
+    const titleEl = document.getElementById('editor-title-text');
+    if (newsId) {
+        titleEl.textContent = t('editor_title_edit');
+        SB.from('news').select('*').eq('id', newsId).single().then(({ data }) => {
+            if (data) {
+                document.getElementById('news-title-input').value = data.title;
+                state.quill.root.innerHTML = data.content;
+                state.currentNewsData = data;
+                if (data.cover_url) {
+                    document.getElementById('cover-url-input').value = data.cover_url;
+                    document.getElementById('cover-preview').src = data.cover_url;
+                    document.getElementById('cover-preview').style.display = 'block';
+                }
+            }
+        });
+    } else {
+        titleEl.textContent = t('editor_title');
+        document.getElementById('news-title-input').value = '';
+        state.quill.root.innerHTML = '';
+    }
+    window.scrollTo(0, 0);
+}
+
+function closeEditor() {
+    state.editingNewsId = null;
+    if (state.currentNewsId) {
+        document.getElementById('editor-page').style.display = 'none';
+        document.getElementById('detail-page').style.display = 'block';
+    } else {
+        showList();
+    }
+}
+
+async function saveNews() {
+    const title = document.getElementById('news-title-input').value.trim();
+    if (!title) { showToast('请填写标题', 'error'); return; }
+    const content = state.quill.root.innerHTML;
+    if (!content || content === '<p><br></p>') { showToast('请填写正文', 'error'); return; }
+
+    const coverUrl = document.getElementById('cover-url-input').value.trim() || null;
+
+    const btn = document.querySelector('#editor-page .detail-actions .primary');
+    const origText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = '处理中...'; }
+
+    try {
+        if (state.editingNewsId) {
+            const { error } = await SB.from('news').update({
+                title, content, cover_url: coverUrl,
+                updated_at: new Date().toISOString()
+            }).eq('id', state.editingNewsId);
+            if (error) throw error;
+            showToast('已保存', 'success');
+        } else {
+            const { error } = await SB.from('news').insert({
+                title, content, cover_url: coverUrl,
+                author: state.user, is_pinned: false
+            });
+            if (error) throw error;
+            showToast('已发布', 'success');
+        }
+        state.editingNewsId = null;
+        showList();
+    } catch (err) {
+        showToast('保存失败: ' + err.message, 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
+    }
+}
+
+async function deleteNews(id) {
+    if (!confirm(t('confirm_delete_news'))) return;
+    const { data, error } = await SB.rpc('admin_delete_news', {
+        operator: state.user, p_news_id: id
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '删除失败', 'error');
+        return;
+    }
+    showToast('已删除', 'success');
+    showList();
+}
+
+async function togglePin(id, current) {
+    const { data, error } = await SB.rpc('admin_toggle_news_pin', {
+        operator: state.user, p_news_id: id
+    });
+    if (error || !data || !data.ok) {
+        showToast((data && data.msg) || '操作失败', 'error');
+        return;
+    }
+    showToast(data.pinned ? '📌 已置顶' : '📍 已取消置顶', 'success');
+    const { data: news } = await SB.from('news').select('*').eq('id', id).single();
+    if (news) {
+        state.currentNewsData = news;
+        await updateDetailActions();
+    }
+}
+
+function openAuth() {
+    document.getElementById('auth-overlay').classList.add('active');
+    document.getElementById('auth-username').value = '';
+    document.getElementById('auth-password').value = '';
+    updateAuthUI();
+}
+function closeAuth() {
+    document.getElementById('auth-overlay').classList.remove('active');
+}
+function toggleAuthMode() {
+    state.isLogin = !state.isLogin;
+    updateAuthUI();
+}
+function updateAuthUI() {
+    const title = document.getElementById('auth-title');
+    const btn = document.getElementById('auth-btn');
+    const sw = document.getElementById('auth-switch');
+    if (state.isLogin) {
+        title.textContent = '登录 APE';
+        btn.textContent = '登录';
+        sw.innerHTML = '没有账号？ <span>去注册</span>';
+    } else {
+        title.textContent = '注册 APE';
+        btn.textContent = '注册';
+        sw.innerHTML = '已有账号？ <span>去登录</span>';
+    }
+}
+
+async function handleAuth() {
+    const u = document.getElementById('auth-username').value.trim();
+    const p = document.getElementById('auth-password').value.trim();
+    if (!u || !p) { showToast('用户名和密码不能为空', 'error'); return; }
+    const btn = document.getElementById('auth-btn');
+    btn.disabled = true;
+    try {
+        const { data: existing } = await SB.from('users').select('*').eq('username', u);
+        if (state.isLogin) {
+            if (!existing || existing.length === 0 || existing[0].password !== p) {
+                showToast('用户名或密码错误', 'error');
+                btn.disabled = false;
+                return;
+            }
+            state.user = u;
+            state.avatar = existing[0].avatar_url || null;
+            state.role = existing[0].role || 'user';
+            localStorage.setItem('ape_user', u);
+            if (state.avatar) localStorage.setItem('ape_avatar', state.avatar);
+            localStorage.setItem('ape_role', state.role);
+            closeAuth();
+            updateAvatarUI();
+            updateNewsBtn();
+            if (state.currentNewsId) updateDetailActions();
+            showToast('欢迎回来，' + u, 'success');
+        } else {
+            if (existing && existing.length > 0) {
+                showToast('用户名已被注册', 'error');
+                btn.disabled = false;
+                return;
+            }
+            const { error } = await SB.from('users').insert({
+                username: u, password: p, avatar_url: null, level: 1, role: 'user'
+            });
+            if (error) throw error;
+            state.user = u;
+            state.avatar = null;
+            state.role = 'user';
+            localStorage.setItem('ape_user', u);
+            localStorage.setItem('ape_role', 'user');
+            closeAuth();
+            updateAvatarUI();
+            updateNewsBtn();
+            if (state.currentNewsId) updateDetailActions();
+            showToast('欢迎加入，' + u + '！', 'success');
+        }
+    } catch (err) {
+        showToast('操作失败: ' + err.message, 'error');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function openUserCenter() {
+    if (!state.user) { openAuth(); return; }
+    const img = document.getElementById('uc-avatar');
+    if (state.avatar && state.avatar.trim()) { img.src = state.avatar; img.style.display = 'block'; }
+    else img.style.display = 'none';
+    document.getElementById('uc-name').textContent = state.user;
+    document.getElementById('uc-edit-name').value = '';
+    document.getElementById('uc-admin-btn').style.display = isAdmin() ? 'block' : 'none';
+    document.getElementById('uc-overlay').classList.add('active');
+}
+function closeUserCenter() {
+    document.getElementById('uc-overlay').classList.remove('active');
+}
+function logoutUser() {
+    if (!confirm('确认退出登录？')) return;
+    state.user = null; state.avatar = null; state.role = 'user';
+    localStorage.removeItem('ape_user');
+    localStorage.removeItem('ape_avatar');
+    localStorage.removeItem('ape_role');
+    closeUserCenter();
+    updateAvatarUI();
+    updateNewsBtn();
+    if (state.currentNewsId) updateDetailActions();
+    showToast('已退出登录', 'info');
+}
+async function saveUCProfile() {
+    const newName = document.getElementById('uc-edit-name').value.trim();
+    if (!newName || newName === state.user) return;
+    const { data: check } = await SB.from('users').select('username').eq('username', newName);
+    if (check && check.length > 0) { showToast('用户名已被注册', 'error'); return; }
+    const { error } = await SB.from('users').update({ username: newName }).eq('username', state.user);
+    if (error) { showToast('修改失败', 'error'); return; }
+    state.user = newName;
+    localStorage.setItem('ape_user', newName);
+    closeUserCenter();
+    updateAvatarUI();
+    showToast('已更新', 'success');
+}
+function handleUCAvatar(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+        const img = document.getElementById('uc-avatar');
+        img.src = ev.target.result;
+        img.style.display = 'block';
+        document.getElementById('uc-avatar-preview').src = ev.target.result;
+        document.getElementById('uc-avatar-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+async function openAdminPanel() {
+    if (!isAdmin()) return;
+    document.getElementById('admin-overlay').classList.add('active');
+    await loadUserList();
+}
+function closeAdminPanel() {
+    document.getElementById('admin-overlay').classList.remove('active');
+}
+async function loadUserList() {
+    const list = document.getElementById('admin-user-list');
+    list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">' + t('loading') + '</div>';
+    const { data: users, error } = await SB.from('users').select('username, role').order('username');
+    if (error || !users || users.length === 0) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-tertiary);padding:20px;">' + t('no_data') + '</div>';
+        return;
+    }
+    list.innerHTML = users.map(u => {
+        const ua = u.role === 'admin' || u.username === ADMIN_USER;
+        const isSelf = u.username === state.user;
+        const isFounder = u.username === ADMIN_USER;
+        let actions = '';
+        const canManage = state.user === ADMIN_USER || state.role === 'admin';
+        if (canManage && !isFounder && u.username !== state.user) {
+            if (u.role === 'admin') {
+                actions += `<button class="btn-set-user" onclick="setUserRole('${u.username}','user')">撤销</button>`;
+            } else {
+                actions += `<button class="btn-set-admin" onclick="setUserRole('${u.username}','admin')">设管理</button>`;
+            }
+            actions += `<button class="btn-delete" onclick="deleteUser('${u.username}')">删除</button>`;
+        }
+        const roleLabel = isFounder ? '创始人' : (ua ? '管理员' : '用户');
+        return `<div class="user-item"><div><span class="uname">${u.username}</span><span class="urole ${ua ? 'admin' : ''}">${roleLabel}</span>${isSelf ? ' (我)' : ''}</div><div class="actions">${actions}</div></div>`;
+    }).join('');
+}
+async function setUserRole(username, role) {
+    if (!confirm(`确认将 ${username} 设为 ${role === 'admin' ? '管理员' : '普通用户'} 吗？`)) return;
+    const { data, error } = await SB.rpc('admin_set_role', { operator: state.user, target: username, new_role: role });
+    if (error || !data || !data.ok) { showToast((data && data.msg) || '操作失败', 'error'); return; }
+    showToast('已更新', 'success');
+    await loadUserList();
+}
+async function deleteUser(username) {
+    if (!confirm(`确认删除用户 ${username}？`)) return;
+    const { data, error } = await SB.rpc('admin_delete_user', { operator: state.user, target: username });
+    if (error || !data || !data.ok) { showToast((data && data.msg) || '删除失败', 'error'); return; }
+    showToast('已删除', 'success');
+    await loadUserList();
+}
+
+function openConfirm(title, desc, callback) {
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-desc').textContent = desc;
+    state.confirmCallback = callback;
+    document.getElementById('confirm-overlay').classList.add('active');
+}
+function closeConfirm() {
+    document.getElementById('confirm-overlay').classList.remove('active');
+    state.confirmCallback = null;
+}
+function confirmAction() {
+    if (state.confirmCallback) state.confirmCallback();
+    closeConfirm();
+}
+
+(function () {
+    const canvas = document.getElementById('particles');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let W = 0, H = 0;
+    const particles = [];
+    const COUNT = 180, MIN_R = 0.8, MAX_R = 1.8, MIN_A = 0.03, MAX_A = 0.10, SPEED = 0.2;
+    const MOUSE_RADIUS = 120, MOUSE_FORCE = 0.3;
+    const mouse = { x: -9999, y: -9999 };
+    function rand(min, max) { return Math.random() * (max - min) + min; }
+    function resize() { W = window.innerWidth; H = window.innerHeight; canvas.width = W; canvas.height = H; }
+    function createParticle() {
+        return { x: Math.random() * W, y: Math.random() * H, r: rand(MIN_R, MAX_R), a: rand(MIN_A, MAX_A), vx: rand(-SPEED, SPEED), vy: rand(-SPEED, SPEED), twinkle: rand(0, Math.PI * 2), twinkleSpeed: rand(0.005, 0.015) };
+    }
+    function init() { resize(); particles.length = 0; for (let i = 0; i < COUNT; i++) particles.push(createParticle()); }
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            const dx = p.x - mouse.x, dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < MOUSE_RADIUS && dist > 0.1) {
+                const strength = (1 - dist / MOUSE_RADIUS) * MOUSE_FORCE;
+                p.vx += (dx / dist) * strength; p.vy += (dy / dist) * strength;
+            }
+            p.x += p.vx; p.y += p.vy; p.vx *= 0.97; p.vy *= 0.97;
+            if (Math.abs(p.vx) < 0.05) p.vx += (Math.random() - 0.5) * 0.02;
+            if (Math.abs(p.vy) < 0.05) p.vy += (Math.random() - 0.5) * 0.02;
+            p.twinkle += p.twinkleSpeed;
+            const breath = (Math.sin(p.twinkle) + 1) / 2;
+            const alpha = p.a * (0.4 + breath * 0.6);
+            if (p.x < -10) p.x = W + 10; if (p.x > W + 10) p.x = -10;
+            if (p.y < -10) p.y = H + 10; if (p.y > H + 10) p.y = -10;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(255, 255, 255, ' + alpha + ')'; ctx.fill();
+        }
+        requestAnimationFrame(draw);
+    }
+    window.addEventListener('resize', function () { resize(); for (let i = 0; i < particles.length; i++) { particles[i].x = Math.random() * W; particles[i].y = Math.random() * H; } });
+    window.addEventListener('mousemove', function (e) { mouse.x = e.clientX; mouse.y = e.clientY; });
+    window.addEventListener('mouseleave', function () { mouse.x = -9999; mouse.y = -9999; });
+    window.addEventListener('touchmove', function (e) { if (e.touches.length > 0) { mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; } }, { passive: true });
+    window.addEventListener('touchend', function () { mouse.x = -9999; mouse.y = -9999; });
+    if (document.readyState === 'complete' || document.readyState === 'interactive') { setTimeout(init, 0); }
+    else { document.addEventListener('DOMContentLoaded', function () { setTimeout(init, 0); }); }
+    requestAnimationFrame(draw);
+})();
+
+async function boot() {
+    await initSB();
+    updateAvatarUI();
+    updateNewsBtn();
+    applyLang();
+    loadNews();
+}
+
+boot();
+
+Object.assign(window, {
+    goBack, showList, openDetail, openEditor, closeEditor, saveNews, deleteNews, togglePin,
+    toggleLike, toggleFav, submitComment, deleteComment, loadComments,
+    openAuth, closeAuth, toggleAuthMode, handleAuth,
+    openUserCenter, closeUserCenter, logoutUser, saveUCProfile, handleUCAvatar,
+    openAdminPanel, closeAdminPanel, setUserRole, deleteUser,
+    openConfirm, closeConfirm, confirmAction,
+    switchLang, loadNews, previewCoverUrl
+});
+
+console.log('APE 新闻页已加载');
+</script>
+</body>
+</html>
